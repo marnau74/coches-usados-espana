@@ -61,3 +61,7 @@ def test_el_primer_mes_descargado_coincide_con_la_ventana_de_dbt():
     proyecto = yaml.safe_load((definitions.RAIZ / "dbt" / "dbt_project.yml").read_text(encoding="utf-8"))
     anio, mes = definitions.DESDE
     assert proyecto["vars"]["inicio_ventana"] == f"{anio}-{mes:02d}-01"
+
+
+def test_el_trabajo_se_ejecuta_en_un_solo_proceso_porque_duckdb_tiene_un_unico_escritor():
+    assert definitions.pipeline_mensual.executor_def is dg.in_process_executor

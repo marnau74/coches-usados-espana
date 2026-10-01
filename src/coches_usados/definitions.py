@@ -191,6 +191,9 @@ pipeline_mensual = dg.define_asset_job(
     "pipeline_mensual",
     selection=dg.AssetSelection.all(),
     description="Descarga de las fuentes, carga en bronze y construcción de silver y gold.",
+    # En un solo proceso y en orden: DuckDB admite un único escritor sobre el fichero del
+    # warehouse, y con el ejecutor por defecto las cargas de bronze se pisarían entre sí.
+    executor_def=dg.in_process_executor,
 )
 
 # La DGT publica los ficheros de un mes hacia mediados del mes siguiente y Eurostat, igual:
