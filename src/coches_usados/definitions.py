@@ -31,6 +31,7 @@ from coches_usados.ingest import dgt
 from coches_usados.ingest.eurostat import EurostatClient, ingerir_series, series_del_catalogo
 
 RAIZ = Path(__file__).resolve().parents[2]
+REFERENCIA_DGT = RAIZ / "datos_de_referencia" / "dgt_tablas"
 
 # dbt lee la ruta del warehouse de COCHES_WAREHOUSE (dbt/profiles.yml) y se ejecuta con
 # dbt/ como directorio de trabajo: se fija una ruta absoluta para que Python y dbt
@@ -88,8 +89,10 @@ def raw_dgt_microdatos(rutas: Rutas) -> dg.MaterializeResult:
 def raw_dgt_tablas(rutas: Rutas) -> dg.MaterializeResult:
     """Tablas estadísticas anuales (Excel) de la DGT: sirven para cuadrar los microdatos. La
     DGT publica cada año el anterior, así que se piden hasta el del año pasado; las que ya
-    están descargadas no se piden de nuevo."""
-    ficheros = dgt.ingerir_tablas(dgt.DgtClient(), Path(rutas.raw) / "dgt_tablas", DESDE[0], date.today().year - 1)
+    están descargadas o guardadas en el repositorio (`datos_de_referencia/`) no se piden."""
+    ficheros = dgt.ingerir_tablas(
+        dgt.DgtClient(), Path(rutas.raw) / "dgt_tablas", DESDE[0], date.today().year - 1, respaldo=REFERENCIA_DGT
+    )
     return dg.MaterializeResult(metadata={"ficheros": len(ficheros)})
 
 

@@ -30,9 +30,12 @@ línea. Tres detalles hacen que una lectura ingenua pierda o desplace datos sin 
 - Los meses que existen se leen del **listado oficial** de cada tipo, no se suponen. Un listado sin
   enlaces es un error (la página ha cambiado).
 - Cada descarga se reintenta con espera creciente, también ante un 404 de un fichero listado.
-- Las **tablas anuales**, que no cambian una vez publicadas, solo se descargan si faltan. Si las
-  del último año aún no están, se avisa y se sigue con las anteriores; un fallo en un año anterior
-  sí detiene la ejecución.
+- Las **tablas anuales**, que no cambian una vez publicadas, no se descargan en cada ejecución:
+  las de los años ya conocidos están guardadas en `datos_de_referencia/` (ficheros oficiales sin
+  modificar) y solo se descargan las de años nuevos. Hubo que hacerlo así porque el servidor de la
+  DGT respondió con errores 500 persistentes a esas tablas desde GitHub Actions, mientras servía
+  bien los microdatos. Si las del último año aún no están, se avisa y se sigue con las anteriores;
+  un fallo en un año anterior sí detiene la ejecución.
 - Los dos últimos meses publicados se vuelven a descargar en cada ejecución, por si la DGT los
   corrige; si no han cambiado, se conserva la copia (y bronze no los rehace).
 

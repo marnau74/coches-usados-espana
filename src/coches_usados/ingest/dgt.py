@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+import shutil
 import time
 import zipfile
 from dataclasses import dataclass
@@ -220,10 +221,16 @@ def ingerir_microdatos(
     return ficheros
 
 
-def ingerir_tablas(cliente: DgtClient, carpeta: Path, desde: int, hasta: int) -> list[Path]:
-    """Descarga las tablas estadísticas anuales de `desde` a `hasta` (ambos incluidos) que no
-    estén ya en `carpeta`. Una tabla anual ya publicada no cambia, así que las que ya hay no se
-    piden de nuevo; la serie histórica solo se pide en su última edición.
+def ingerir_tablas(
+    cliente: DgtClient, carpeta: Path, desde: int, hasta: int, respaldo: Path | None = None
+) -> list[Path]:
+    """Deja en `carpeta` las tablas estadísticas anuales de `desde` a `hasta` (ambos incluidos).
+
+    Una tabla anual ya publicada no cambia, así que las que ya están en `carpeta` no se piden de
+    nuevo y, si no están, se copian de `respaldo` (copias oficiales guardadas en el repositorio:
+    el servidor de la DGT responde a veces con errores 500, también desde GitHub Actions). Solo
+    se descargan las que no están en ninguno de los dos sitios. La serie histórica solo se pide
+    en su última edición.
 
     La DGT publica cada año el anterior: si la del último año aún no está (o el servidor falla),
     se avisa y se sigue con las anteriores. Un fallo en un año anterior sí es un error. Sin
@@ -234,7 +241,11 @@ def ingerir_tablas(cliente: DgtClient, carpeta: Path, desde: int, hasta: int) ->
         for clave in TABLAS_ANUALES:
             if clave.endswith("_series") and anio != hasta:
                 continue
-            destino = carpeta / f"{clave}_{anio}.xlsx"
+            nombre = f"{clave}_{anio}.xlsx"
+            destino = carpeta / nombre
+            if not destino.exists() and respaldo is not None and (respaldo / nombre).exists():
+                carpeta.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(respaldo / nombre, destino)
             if destino.exists():
                 ficheros.append(destino)
                 continue

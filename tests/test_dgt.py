@@ -249,3 +249,36 @@ def test_sin_ninguna_tabla_no_hay_con_que_cuadrar(tmp_path):
     c, _ = cliente({})
     with pytest.raises(RuntimeError, match="no se pueden cuadrar"):
         dgt.ingerir_tablas(c, tmp_path, 2025, 2025)
+
+
+def test_las_tablas_del_respaldo_se_copian_sin_pedir_nada_a_la_dgt(tmp_path):
+    respaldo = tmp_path / "respaldo"
+    respaldo.mkdir()
+    for clave in dgt.TABLAS_ANUALES:
+        (respaldo / f"{clave}_2025.xlsx").write_bytes(b"copia oficial")
+    c, _ = cliente({})  # cualquier petición daría 404
+    ficheros = dgt.ingerir_tablas(c, tmp_path / "raw", 2025, 2025, respaldo=respaldo)
+    assert len(ficheros) == 3
+    assert c.sesion.peticiones == []
+    assert (tmp_path / "raw" / "bajas_tablas_2025.xlsx").read_bytes() == b"copia oficial"
+
+
+def test_lo_que_no_esta_en_el_respaldo_se_descarga(tmp_path):
+    respaldo = tmp_path / "respaldo"
+    respaldo.mkdir()
+    (respaldo / "bajas_tablas_2024.xlsx").write_bytes(b"copia")
+    (respaldo / "transferencias_tablas_2024.xlsx").write_bytes(b"copia")
+    c, _ = cliente(tablas((2025,)))
+    ficheros = dgt.ingerir_tablas(c, tmp_path / "raw", 2024, 2025, respaldo=respaldo)
+    assert len(ficheros) == 5
+    assert len(c.sesion.peticiones) == 3  # solo 2025: las dos tablas y la serie
+
+
+def test_el_respaldo_del_repositorio_tiene_las_tablas_que_usa_el_pipeline():
+    from coches_usados import definitions
+
+    nombres = {f.name for f in definitions.REFERENCIA_DGT.glob("*.xlsx")}
+    for anio in range(definitions.DESDE[0], 2026):
+        assert f"transferencias_tablas_{anio}.xlsx" in nombres
+        assert f"bajas_tablas_{anio}.xlsx" in nombres
+    assert "transferencias_series_2025.xlsx" in nombres

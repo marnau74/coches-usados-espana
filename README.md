@@ -181,6 +181,7 @@ dbt/
   models/        staging, intermediate y marts
   seeds/         series de Eurostat, provincias, tipos de vehículo y excepciones documentadas
   tests/         tests singulares (cuadre con la DGT, completitud...) y genéricos propios
+datos_de_referencia/  tablas estadísticas anuales de la DGT (oficiales, sin modificar)
 tests/           pytest, con datos sintéticos del mismo formato que las fuentes
 ```
 
@@ -196,10 +197,11 @@ tests/           pytest, con datos sintéticos del mismo formato que las fuentes
 - El modelo se agrupa por familia con reglas sencillas: algunas denominaciones comerciales se
   reparten en dos nombres en el registro.
 - Los recuentos por provincia no se ponderan por población (no hay un padrón en el proyecto).
-- `publicar.yml` todavía no se ha ejecutado en GitHub Actions. Contra la DGT real se han probado
-  el listado de meses y la descarga de los microdatos. El servidor de las tablas anuales falla a
-  ratos (a un fichero que no existe responde con una redirección a un servidor con certificado
-  inválido, no con un 404), así que las tablas ya descargadas no se vuelven a pedir.
+- El servidor de la DGT falla a ratos con las tablas anuales (errores 500, y a un fichero que no
+  existe responde con una redirección a un servidor con certificado inválido, no con un 404).
+  Por eso las ya publicadas están guardadas en [`datos_de_referencia/`](datos_de_referencia/README.md)
+  y solo se descargan las de años nuevos. Los microdatos sí se descargan sin problemas, también
+  desde GitHub Actions.
 
 ## Licencia
 
