@@ -1,0 +1,44 @@
+name: ci
+
+# Calidad en cada cambio: sin red y en pocos minutos. Los datos reales (2 GB) solo se
+# descargan en publicar.yml; aquí se usan datos sintéticos con el formato exacto de las fuentes.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Instalar dependencias
+        run: uv sync --frozen
+      - name: Sin rutas locales ni correos personales
+        run: |
+          if git grep -nIiE '([a-z]:[\\/]+users[\\/]|/home/[a-z0-9_-]+/|@(gmail|hotmail|outlook|yahoo)\.)' -- . ':!uv.lock'; then
+            echo "Hay datos personales en el repositorio" && exit 1
+          fi
+      - name: Lint y formato
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Estilo del SQL
+        run: uv run sqlfluff lint dbt/models dbt/tests/*.sql
+      - name: Tests
+        run: uv run pytest
+      # dbt contra un warehouse hecho con datos sintéticos: modelos, seeds y todos los tests,
+      # incluidos los de cuadre con las tablas oficiales de la DGT.
+      - name: dbt build (datos sintéticos)
+        env:
+          COCHES_WAREHOUSE: data/warehouse_ci.duckdb
+        run: |
+          uv run python scripts/warehouse_de_prueba.py "$COCHES_WAREHOUSE"
+          uv run dbt build --project-dir dbt --profiles-dir dbt

@@ -1,0 +1,115 @@
+cod_tipo,descripcion,grupo
+00,Camión,camiones
+01,Camión plataforma,camiones
+02,Camión caja,camiones
+03,Camión furgón,camiones
+04,Camión botellero,camiones
+05,Camión cisterna,camiones
+06,Camión jaula,camiones
+07,Camión frigorífico,camiones
+08,Camión taller,camiones
+09,Camión para cantera,camiones
+0A,Camión portavehículos,camiones
+0B,Camión mixto,camiones
+0C,Camión portacontenedores,camiones
+0D,Camión basurero,camiones
+0E,Camión isotermo,camiones
+0F,Camión silo,camiones
+0G,Vehículo mixto adaptable,camiones
+10,Camión articulado,camiones
+11,Camión articulado plataforma,camiones
+12,Camión articulado caja,camiones
+13,Camión articulado furgón,camiones
+14,Camión articulado botellero,camiones
+15,Camión articulado cisterna,camiones
+16,Camión articulado jaula,camiones
+17,Camión articulado frigorífico,camiones
+18,Camión articulado taller,camiones
+19,Camión articulado para cantera,camiones
+1A,Camión articulado vivienda o caravana,camiones
+1C,Camión articulado hormigonera,camiones
+1D,Camión articulado volquete,camiones
+1E,Camión articulado grúa,camiones
+1F,Camión articulado contra incendios,camiones
+20,Furgoneta,furgonetas
+21,Furgoneta mixta,furgonetas
+22,Ambulancia,furgonetas
+23,Coche fúnebre,furgonetas
+24,Camioneta,camiones
+25,Todo terreno,furgonetas
+30,Autobús,autobuses
+31,Autobús articulado,autobuses
+32,Autobús mixto,autobuses
+33,Bibliobús,autobuses
+34,Autobús laboratorio,autobuses
+35,Autobús taller,autobuses
+36,Autobús sanitario,autobuses
+40,Turismo,turismos
+50,Motocicleta de 2 ruedas sin sidecar,motocicletas
+51,Motocicleta con sidecar,motocicletas
+52,Motocarro,motocicletas
+53,Automóvil de 3 ruedas,motocicletas
+54,Cuatriciclo pesado,motocicletas
+60,Coche de inválido,otros
+70,Vehículo especial,otros
+71,Pala cargadora,otros
+72,Pala excavadora,otros
+73,Carretilla elevadora,otros
+74,Motoniveladora,otros
+75,Compactadora,otros
+76,Apisonadora,otros
+77,Girogravilladora,otros
+78,Machacadora,otros
+79,Quitanieves,otros
+7A,Vivienda,turismos
+7B,Barredora,otros
+7C,Hormigonera,otros
+7D,Volquete de canteras,otros
+7E,Grúa,otros
+7F,Servicio contra incendios,otros
+7G,Aspiradora de fangos,otros
+7H,Motocultor,otros
+7I,Maquinaria agrícola automotriz,otros
+7J,Pala cargadora-retroexcavadora,otros
+7K,Tren hasta 160 plazas,otros
+80,Tractor,otros
+81,Tractocamión,tractores_industriales
+82,Tractocarro,otros
+90,Ciclomotor de 2 ruedas,ciclomotores
+91,Ciclomotor de 3 ruedas,ciclomotores
+92,Cuatriciclo ligero,ciclomotores
+EX,Extranjero,otros
+R0,Remolque,remolques
+R1,Remolque plataforma,remolques
+R2,Remolque caja,remolques
+R3,Remolque furgón,remolques
+R4,Remolque botellero,remolques
+R5,Remolque cisterna,remolques
+R6,Remolque jaula,remolques
+R7,Remolque frigorífico,remolques
+R8,Remolque taller,remolques
+R9,Remolque para canteras,remolques
+RA,Remolque vivienda o caravana,remolques
+RB,Remolque de viajeros o de autobús,remolques
+RC,Remolque hormigonera,remolques
+RD,Remolque volquete de cantera,remolques
+RE,Remolque de grúa,remolques
+RF,Remolque contra incendios,remolques
+RH,Maquinaria agrícola arrastrada de 2 ejes,remolques
+S0,Semirremolque,remolques
+S1,Semirremolque plataforma,remolques
+S2,Semirremolque caja,remolques
+S3,Semirremolque furgón,remolques
+S4,Semirremolque botellero,remolques
+S5,Semirremolque cisterna,remolques
+S6,Semirremolque jaula,remolques
+S7,Semirremolque frigorífico,remolques
+S8,Semirremolque taller,remolques
+S9,Semirremolque cantera,remolques
+SA,Semirremolque vivienda o caravana,remolques
+SB,Semirremolque viajeros o autobús,remolques
+SC,Semirremolque hormigonera,remolques
+SD,Semirremolque volquete de cantera,remolques
+SE,Semirremolque grúa,remolques
+SF,Semirremolque contra incendios,remolques
+SH,Maquinaria agrícola arrastrada de 1 eje,remolques

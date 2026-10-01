@@ -1,0 +1,43 @@
+name: coches_usados
+version: "1.0.0"
+config-version: 2
+profile: coches_usados
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Primer mes que se analiza. Los trámites anteriores (registros muy tardíos) se descartan.
+  inicio_ventana: "2024-01-01"
+
+flags:
+  require_explicit_package_overrides_for_builtin_materializations: true
+
+models:
+  coches_usados:
+    # silver: vistas sobre bronze (staging) y reglas de negocio (intermediate)
+    staging:
+      +schema: silver
+      +materialized: view
+    intermediate:
+      +schema: silver
+      +materialized: table
+    # gold: el modelo en estrella, con contrato
+    marts:
+      +schema: gold
+      +materialized: table
+
+seeds:
+  coches_usados:
+    +schema: ref
+    provincias:
+      +column_types:
+        codigo_dgt: varchar
+        codigo_ine: varchar
+    tipos_vehiculo:
+      +column_types:
+        cod_tipo: varchar

@@ -1,0 +1,9 @@
+# Sin secretos: DuckDB es un fichero local. La ruta se puede cambiar con
+# COCHES_WAREHOUSE (la CI la apunta a un warehouse de prueba).
+coches_usados:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('COCHES_WAREHOUSE', 'data/warehouse.duckdb') }}"
+      threads: 4

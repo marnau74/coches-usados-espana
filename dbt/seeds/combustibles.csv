@@ -1,0 +1,9 @@
+combustible_id,nombre,orden,enchufable
+gasolina,Gasolina,1,false
+diesel,Diésel,2,false
+hibrido,Híbrido no enchufable,3,false
+hibrido_enchufable,Híbrido enchufable,4,true
+electrico,Eléctrico de batería,5,true
+gas,Gas (GLP o gas natural),6,false
+otros,Otros,7,false
+desconocido,Sin dato,8,false

@@ -1,0 +1,53 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Capa bronze en DuckDB, cargada por coches_usados.bronze. Datos tal cual.
+    schema: bronze
+    tables:
+      - name: dgt_matriculaciones
+        description: >
+          Microdatos mensuales de matriculaciones de la DGT: un trámite por fila, los 69
+          campos del diseño de registro como texto recortado (vista sobre un Parquet por mes).
+        columns: &columnas_dgt
+          - name: fec_tramite
+            description: Fecha del trámite (DDMMAAAA).
+            data_tests: [not_null]
+          - name: clave_tramite
+            data_tests: [not_null]
+          - name: _fichero_origen
+            data_tests: [not_null]
+          - name: _linea
+            data_tests: [not_null]
+      - name: dgt_transferencias
+        description: Microdatos mensuales de cambios de titularidad de la DGT (mismo formato).
+        columns: *columnas_dgt
+      - name: dgt_bajas
+        description: Microdatos mensuales de bajas temporales y definitivas de la DGT (mismo formato).
+        columns: *columnas_dgt
+      - name: dgt_tablas_mensuales
+        description: >
+          Tablas estadísticas anuales de la DGT «por meses y tipos» (cambios de titularidad y
+          bajas), en formato largo. Se usan para cuadrar los microdatos.
+        columns:
+          - name: valor
+            data_tests: [not_null, no_negativo]
+      - name: dgt_series_historicas
+        description: Serie histórica anual de cambios de titularidad por tipo de vehículo (desde 1990).
+        columns:
+          - name: valor
+            data_tests: [not_null, no_negativo]
+      - name: eurostat_series
+        description: Una fila por serie de Eurostat y mes de la última ingesta.
+        columns:
+          - name: id_serie
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: ref('series_eurostat')
+                    field: id
+          - name: periodo
+            data_tests: [not_null]
+          - name: valor
+            data_tests: [not_null]

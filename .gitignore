@@ -1,0 +1,32 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/raw/*
+!data/raw/.gitkeep
+.env
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Web generada (la publica GitHub Actions)
+site/
+
+# Capa bronze (Parquet) y warehouse locales: se regeneran con el pipeline
+data/bronze/
+data/*_bronze/
+data/*.duckdb
+data/*.duckdb.wal
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+dbt/.user.yml
+
+# Dagster en local
+.tmp_dagster_home_*/
+
+# Release de datos (la genera el workflow de publicación)
+release/

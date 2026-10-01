@@ -1,0 +1,9 @@
+id,conjunto,geo,coicop,unidad,territorio,producto,medida
+es_segunda_mano_indice,prc_hicp_minr,ES,CP07112,I25,espana,automoviles_segunda_mano,indice
+es_segunda_mano_tasa,prc_hicp_minr,ES,CP07112,RCH_A,espana,automoviles_segunda_mano,tasa_anual
+es_nuevos_indice,prc_hicp_minr,ES,CP07111,I25,espana,automoviles_nuevos,indice
+es_nuevos_tasa,prc_hicp_minr,ES,CP07111,RCH_A,espana,automoviles_nuevos,tasa_anual
+es_general_indice,prc_hicp_minr,ES,TOTAL,I25,espana,general,indice
+es_general_tasa,prc_hicp_minr,ES,TOTAL,RCH_A,espana,general,tasa_anual
+ea_segunda_mano_indice,prc_hicp_minr,EA20,CP07112,I25,zona_euro,automoviles_segunda_mano,indice
+ea_segunda_mano_tasa,prc_hicp_minr,EA20,CP07112,RCH_A,zona_euro,automoviles_segunda_mano,tasa_anual

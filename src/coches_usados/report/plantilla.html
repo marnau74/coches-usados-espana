@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El mercado de coches de segunda mano en España</title>
+<meta name="description" content="Cambios de titularidad, matriculaciones y bajas de turismos en España con datos oficiales de la DGT, y la evolución de los precios de los coches de segunda mano según Eurostat.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fondo: #faf8f4;
+    --texto: #1c1b19;
+    --suave: #6b665e;
+    --filete: #dcd6cb;
+    --acento: #1d5b85;
+    --oscuro: #2f2d29;
+    --arena: #a08c6c;
+    --gris: #b8b2a7;
+    --hueco: #efebe3;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fondo: #151412;
+      --texto: #ece8e1;
+      --suave: #9d978c;
+      --filete: #35322d;
+      --acento: #74aee0;
+      --oscuro: #d9d4ca;
+      --arena: #b39f7f;
+      --gris: #6f6a62;
+      --hueco: #211f1c;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fondo: #151412;
+    --texto: #ece8e1;
+    --suave: #9d978c;
+    --filete: #35322d;
+    --acento: #74aee0;
+    --oscuro: #d9d4ca;
+    --arena: #b39f7f;
+    --gris: #6f6a62;
+    --hueco: #211f1c;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--texto);
+    font: 18px/1.6 "Newsreader", Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 40px; }
+
+  .antetitulo, .meta, .cifra, figcaption, table, footer, .nota, .leyenda, .pie {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+  }
+  .antetitulo {
+    font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--acento); margin: 0 0 16px;
+  }
+  h1 {
+    font-size: clamp(34px, 6vw, 52px); line-height: 1.08; font-weight: 500;
+    letter-spacing: -.015em; margin: 0 0 20px;
+  }
+  .entradilla { font-size: 22px; line-height: 1.45; margin: 0 0 20px; }
+  .meta { font-size: 14px; color: var(--suave); margin: 0; padding-bottom: 32px; border-bottom: 1px solid var(--texto); }
+
+  .cifras { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--filete); margin-bottom: 8px; }
+  .cifra { padding: 24px 16px 24px 0; }
+  .cifra + .cifra { padding-left: 16px; border-left: 1px solid var(--filete); }
+  .cifra b { display: block; font-size: 30px; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+  .cifra b small { font-size: 18px; }
+  .cifra span { display: block; font-size: 13px; line-height: 1.4; color: var(--suave); }
+
+  section { padding-top: 48px; }
+  h2 { font-size: 28px; line-height: 1.2; font-weight: 500; margin: 0 0 12px; }
+  p { margin: 0 0 16px; }
+  figure { margin: 24px 0 0; }
+  figcaption, .pie { font-size: 13px; color: var(--suave); margin-top: 8px; line-height: 1.5; }
+  .grafico { width: 100%; min-height: 280px; }
+  .grafico svg { overflow: visible; }
+
+  .leyenda { font-size: 13px; line-height: 1; display: flex; gap: 20px; flex-wrap: wrap; margin: 0 0 12px; color: var(--suave); }
+  .leyenda span::before { content: ""; display: inline-block; width: 16px; height: 2px; vertical-align: middle; margin-right: 6px; background: var(--c); }
+  .leyenda .fuerte::before { height: 3px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 24px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 10px 0 10px 12px; border-bottom: 1px solid var(--filete); }
+  th:first-child, td:first-child { text-align: left; padding-left: 0; }
+  thead th { font-weight: 500; font-size: 13px; color: var(--suave); border-bottom-color: var(--texto); vertical-align: bottom; }
+  td { white-space: nowrap; }
+  td:first-child { font-weight: 500; white-space: normal; }
+  td:first-child i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; }
+  tr.resaltada td { background: var(--hueco); }
+
+  .nota { font-size: 15px; line-height: 1.6; }
+  .nota h2 { font-family: "Newsreader", Georgia, serif; }
+  .nota p { margin-bottom: 12px; }
+  .nota b { font-weight: 600; }
+  a { color: inherit; text-decoration-color: var(--acento); text-underline-offset: 3px; }
+
+  footer {
+    max-width: 760px; margin: 0 auto; padding: 24px 16px 48px;
+    font-size: 13px; color: var(--suave); border-top: 1px solid var(--filete);
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  footer nav { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 640px) {
+    body { font-size: 17px; }
+    main { padding-top: 32px; }
+    .entradilla { font-size: 19px; }
+    .cifras { grid-template-columns: 1fr 1fr; }
+    .cifra:nth-child(3) { padding-left: 0; border-left: 0; }
+    .cifra:nth-child(n+3) { border-top: 1px solid var(--filete); }
+    .cifra b { font-size: 26px; }
+    table { font-size: 14px; }
+    .ocultar-movil { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="antetitulo">Datos abiertos · DGT y Eurostat</p>
+  <h1>El mercado de coches de segunda mano en España</h1>
+  <p class="entradilla" id="entradilla"></p>
+  <p class="meta" id="meta"></p>
+
+  <div class="cifras" id="cifras"></div>
+
+  <section>
+    <h2>Un mercado con estaciones</h2>
+    <p id="texto-serie"></p>
+    <figure>
+      <div class="leyenda" id="leyenda-serie" aria-hidden="true"></div>
+      <div class="grafico" id="g-serie"></div>
+      <figcaption id="pie-serie"></figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Cuántos coches usados por cada nuevo</h2>
+    <p id="texto-ratio"></p>
+    <figure>
+      <div class="grafico" id="g-ratio"></div>
+      <figcaption id="pie-ratio"></figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>El combustible del coche nuevo y el del usado</h2>
+    <p id="texto-combustible"></p>
+    <figure>
+      <div class="leyenda" id="leyenda-electrif" aria-hidden="true"></div>
+      <div class="grafico" id="g-electrif"></div>
+      <figcaption id="pie-electrif"></figcaption>
+    </figure>
+    <table id="tabla-combustible"></table>
+    <p class="pie" id="pie-tabla-combustible"></p>
+  </section>
+
+  <section>
+    <h2>La edad de los coches que cambian de manos</h2>
+    <p id="texto-antiguedad"></p>
+    <figure>
+      <div class="grafico" id="g-antiguedad"></div>
+      <figcaption id="pie-antiguedad"></figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Los modelos que más cambian de manos</h2>
+    <p id="texto-modelos"></p>
+    <table id="tabla-modelos"></table>
+    <p class="pie" id="pie-tabla-modelos"></p>
+  </section>
+
+  <section>
+    <h2>Dónde cambian de manos</h2>
+    <p id="texto-provincias"></p>
+    <table id="tabla-provincias"></table>
+    <p class="pie" id="pie-tabla-provincias"></p>
+  </section>
+
+  <section>
+    <h2>Lo que cuestan: un índice, no un precio</h2>
+    <p id="texto-precios"></p>
+    <figure>
+      <div class="leyenda" id="leyenda-precios" aria-hidden="true"></div>
+      <div class="grafico" id="g-precios"></div>
+      <figcaption id="pie-precios"></figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Los coches que salen del parque</h2>
+    <p id="texto-bajas"></p>
+    <figure>
+      <div class="leyenda" id="leyenda-bajas" aria-hidden="true"></div>
+      <div class="grafico" id="g-bajas"></div>
+      <figcaption id="pie-bajas"></figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Treinta y cinco años de cambios de titularidad</h2>
+    <p id="texto-historico"></p>
+    <figure>
+      <div class="leyenda" id="leyenda-historico" aria-hidden="true"></div>
+      <div class="grafico" id="g-historico"></div>
+      <figcaption id="pie-historico"></figcaption>
+    </figure>
+  </section>
+
+  <section class="nota">
+    <h2>Calidad de los datos</h2>
+    <p id="texto-cuadre"></p>
+    <p>Cada ejecución mensual pasa las comprobaciones de calidad del pipeline antes de publicar: que haya un fichero por cada mes y tipo de trámite, que todas las fechas sean válidas, claves únicas, relaciones entre tablas, que la variación de precios de Eurostat coincida con la que sale de su índice y que los microdatos cuadren con las tablas de la DGT. Si alguna falla, esta página no se actualiza. <a href="docs/">Documentación y linaje de los datos</a>.</p>
+  </section>
+
+  <section class="nota">
+    <h2>Nota metodológica</h2>
+    <p><b>Fuentes.</b> Los microdatos mensuales de matriculaciones, transferencias y bajas de la Dirección General de Tráfico (licencia CC BY 4.0), sus tablas estadísticas anuales y el índice de precios de consumo armonizado de Eurostat para los automóviles de segunda mano, los nuevos y el conjunto de bienes y servicios.</p>
+    <p><b>Qué es un trámite.</b> Cada cifra cuenta trámites, no coches distintos. Una compraventa de un concesionario genera dos cambios de titularidad (del particular al concesionario y de este al comprador), y un cambio de titularidad no es necesariamente una venta: también lo son las herencias o las donaciones. Aquí «turismo» es el tipo 40 de la DGT: quedan fuera furgonetas, todoterrenos de tipo 25, autocaravanas y motos.</p>
+    <p><b>A qué mes pertenece un trámite.</b> Al de su fecha de trámite, no al del fichero en el que llega: la DGT incluye en cada fichero trámites tardíos de meses anteriores (en el de junio de 2025, 65.669 turismos fechados en abril). Por eso los dos últimos meses son <b>provisionales</b>: <span id="texto-tardios"></span></p>
+    <p><b>Lo que no hay.</b> No existe una fuente oficial y abierta de precios de los coches en euros: el índice de Eurostat mide cómo cambian los precios, no cuánto cuesta un coche. Tampoco hay datos de compraventa entre particulares fuera de la DGT, y los recuentos por provincia no se ponderan por población.</p>
+  </section>
+</main>
+<footer>
+  <span>Proyecto de Mario Arnau</span>
+  <nav>
+    <a href="https://github.com/marnau74/coches-usados-espana">Código</a>
+    <a href="docs/">Documentación</a>
+    <a href="https://github.com/marnau74/coches-usados-espana/releases">Descargar los datos</a>
+  </nav>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.17/dist/plot.umd.min.js"></script>
+<script>
+const DATOS = /*__DATOS__*/null;
+
+// ---------- Utilidades ----------
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const MESES_LARGO = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const NOMBRE_COMB = { gasolina: "Gasolina", diesel: "Diésel", hibrido: "Híbrido", hibrido_enchufable: "Híbrido enchufable", electrico: "Eléctrico", gas: "Gas", otros: "Otros" };
+const COMBS = ["gasolina", "diesel", "hibrido", "hibrido_enchufable", "electrico", "gas", "otros"];
+const ELECTRIFICADOS = ["hibrido", "hibrido_enchufable", "electrico"];
+const NOMBRE_TRAMO = { "0_2": "0–2 años", "3_5": "3–5", "6_9": "6–9", "10_14": "10–14", "15_19": "15–19", "20_o_mas": "20 o más", sin_dato: "Sin dato" };
+const TRAMOS = ["0_2", "3_5", "6_9", "10_14", "15_19", "20_o_mas"];
+const NOMBRE_MOTIVO = { voluntaria: "Voluntaria", desguace: "Desguace", de_oficio: "De oficio", exportacion: "Exportación", otros_motivos: "Otros motivos" };
+const MOTIVOS = ["voluntaria", "exportacion", "de_oficio", "desguace", "otros_motivos"];
+const NOMBRE_PRODUCTO = { automoviles_segunda_mano: "Coches de segunda mano", automoviles_nuevos: "Coches nuevos", general: "Todos los precios" };
+const PRODUCTOS = ["automoviles_segunda_mano", "automoviles_nuevos", "general"];
+const NOMBRE_TRAMITE = { transferencia: "Cambios de titularidad", matriculacion: "Matriculaciones" };
+const NOMBRE_GRUPO = { turismos: "Turismos", camiones_y_furgonetas: "Camiones y furgonetas", motocicletas: "Motocicletas" };
+const COLOR = {
+  transferencia: "acento", matriculacion: "oscuro",
+  matriculaciones: "oscuro", transferencias: "acento",
+  automoviles_segunda_mano: "acento", automoviles_nuevos: "oscuro", general: "gris",
+  voluntaria: "acento", exportacion: "oscuro", de_oficio: "arena", desguace: "gris", otros_motivos: "suave",
+  turismos: "acento", camiones_y_furgonetas: "oscuro", motocicletas: "arena",
+};
+const DESTACADO = new Set(["transferencia", "automoviles_segunda_mano", "turismos", "voluntaria"]);
+
+const num = (v, dec = 0) => new Intl.NumberFormat("es-ES", { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
+const pct = (v, dec = 0) => `${num(v, dec)} %`;
+const conSigno = (v, dec = 0) => (v >= 0 ? "+" : "−") + pct(Math.abs(v), dec);
+const mesTexto = ym => { const [a, m] = ym.split("-"); return `${MESES_LARGO[m - 1]} de ${a}`; };
+const fecha = s => new Date(s.slice(0, 10) + "T00:00:00");
+const $ = id => document.getElementById(id);
+const suma = xs => xs.reduce((s, x) => s + x, 0);
+const cap = s => s.replace(/^./, c => c.toUpperCase());
+const SIGLAS = new Set(["BMW", "MG", "DS", "DR", "BYD", "SWM", "KG", "AMG", "SEAT"]);
+const NOMBRES = { CITROEN: "Citroën", LEON: "León", MEGANE: "Mégane", "T-ROC": "T-Roc", "C-HR": "C-HR" };
+const titulo = s => s.split(" ").map(p => SIGLAS.has(p) ? p : NOMBRES[p] ?? p.toLowerCase().replace(/(^|[-])\p{L}/gu, c => c.toUpperCase())).join(" ");
+const lista = xs => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} y ${xs[xs.length - 1]}`);
+
+function colores() {
+  const css = getComputedStyle(document.documentElement);
+  const c = n => css.getPropertyValue(`--${n}`).trim();
+  return Object.fromEntries(["acento", "oscuro", "arena", "gris", "suave", "hueco", "filete"].map(n => [n, c(n)]));
+}
+const colorDe = (grupo, c) => c[COLOR[grupo]];
+function leyenda(id, grupos, nombres) {
+  $(id).innerHTML = grupos.map(g => `<span class="${DESTACADO.has(g) ? "fuerte" : ""}" style="--c:var(--${COLOR[g]})">${nombres[g]}</span>`).join("");
+}
+
+// ---------- Datos derivados ----------
+const M = DATOS.meta;
+const anio = M.anios_completos.at(-1), anioPrevio = M.anios_completos.at(-2);
+const delAnio = (datos, a) => datos.filter(d => new Date(d.fecha).getUTCFullYear() === a);
+const total = (tramite, a) => suma(delAnio(DATOS.serie.filter(d => d.tramite === tramite), a).map(d => d.tramites));
+const transf = total("transferencia", anio), transfPrevio = total("transferencia", anioPrevio);
+const matric = total("matriculacion", anio), matricPrevio = total("matriculacion", anioPrevio);
+const ratio = transf / matric, ratioPrevio = transfPrevio / matricPrevio;
+const edadMedia = a => {
+  const filas = DATOS.antiguedad_anual.filter(d => d.anio === a && d.tramo !== "sin_dato");
+  const centro = { "0_2": 1, "3_5": 4, "6_9": 7.5, "10_14": 12, "15_19": 17, "20_o_mas": 25 };
+  return suma(filas.map(d => d.tramites * centro[d.tramo])) / suma(filas.map(d => d.tramites));
+};
+const edadMediaMensual = (a) => {
+  const filas = DATOS.antiguedad_media.filter(d => d.tramite === "transferencia" && new Date(d.fecha).getUTCFullYear() === a);
+  return suma(filas.map(d => d.antiguedad_media)) / filas.length;
+};
+const cuota = (tramite, a, combs) => {
+  const filas = delAnio(DATOS.combustible.filter(d => d.tramite === tramite), a);
+  return 100 * suma(filas.filter(d => combs.includes(d.combustible)).map(d => d.tramites)) / suma(filas.map(d => d.tramites));
+};
+const ultimoPrecio = (producto, territorio = "espana") => DATOS.precios.filter(d => d.producto === producto && d.territorio === territorio).at(-1);
+const fechaIso = s => new Date(s).toISOString().slice(0, 10);
+const mesDeFecha = s => new Date(s).getUTCMonth() + 1;
+
+const pSegunda = ultimoPrecio("automoviles_segunda_mano"), pNuevos = ultimoPrecio("automoviles_nuevos"), pGeneral = ultimoPrecio("general");
+
+// ---------- Textos y cifras (todo calculado) ----------
+$("entradilla").textContent =
+  `En ${anio} se registraron ${num(transf / 1e6, 1)} millones de cambios de titularidad de turismos en España, ${num(ratio, 1)} por cada matriculación. ` +
+  `El coche que cambia de manos tiene de media unos ${num(edadMediaMensual(anio))} años, y el índice de precios de los de segunda mano subió un ${pct(pSegunda.variacion_anual, 1)} en el último año.`;
+$("meta").textContent =
+  `Microdatos de la DGT de ${mesTexto(M.primer_mes)} a ${mesTexto(M.ultimo_mes)}` + (M.provisional_desde ? ` (provisionales desde ${mesTexto(M.provisional_desde)})` : "") +
+  ` y precios de Eurostat hasta ${mesTexto(M.ultimo_mes_eurostat)} · Actualizado el ${new Date(DATOS.generado).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}`;
+
+$("cifras").innerHTML = [
+  [`${num(transf / 1e6, 2)} <small>M</small>`, `cambios de titularidad de turismos en ${anio} (${conSigno((transf / transfPrevio - 1) * 100, 1)} frente a ${anioPrevio})`],
+  [`${num(ratio, 1)}×`, `cambios de titularidad por cada matriculación en ${anio} (en ${anioPrevio}, ${num(ratioPrevio, 1)}×)`],
+  [`${num(edadMediaMensual(anio), 1)} <small>años</small>`, `antigüedad media del coche que cambia de titular en ${anio}`],
+  [pct(cuota("matriculacion", anio, ELECTRIFICADOS)), `de las matriculaciones de ${anio} fueron híbridos, enchufables o eléctricos; entre los coches que cambian de manos, el ${pct(cuota("transferencia", anio, ELECTRIFICADOS))}`],
+].map(([b, s]) => `<div class="cifra"><b>${b}</b><span>${s}</span></div>`).join("");
+
+// Serie mensual
+const serie = DATOS.serie.filter(d => d.tramite !== "baja").map(d => ({ ...d, fecha: fecha(d.fecha) }));
+const mesesDeTransf = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => ({
+  mes: m,
+  media: suma(M.anios_completos.map(a => DATOS.serie.find(d => d.tramite === "transferencia" && d.fecha.startsWith(`${a}-${String(m).padStart(2, "0")}`)).tramites)) / M.anios_completos.length,
+}));
+const mesAlto = mesesDeTransf.reduce((a, b) => (b.media > a.media ? b : a)), mesBajo = mesesDeTransf.reduce((a, b) => (b.media < a.media ? b : a));
+$("texto-serie").textContent =
+  `Los cambios de titularidad no se reparten igual a lo largo del año. De media en ${M.anios_completos.join(" y ")}, ${MESES_LARGO[mesAlto.mes - 1]} es el mes con más (${num(mesAlto.media)}) y ${MESES_LARGO[mesBajo.mes - 1]} el que menos (${num(mesBajo.media)}), ` +
+  `una diferencia del ${pct((mesAlto.media / mesBajo.media - 1) * 100)}. Las matriculaciones tienen su propio ritmo, con picos en los cierres de trimestre y de año.`;
+$("pie-serie").textContent = `Trámites de turismos por mes (DGT). La banda sombreada marca los dos últimos meses, provisionales: la DGT sigue añadiendo trámites tardíos en los ficheros siguientes.`;
+
+// Cociente usados / nuevos
+const mesesComparables = Math.max(...DATOS.serie.filter(d => !d.provisional && d.fecha.startsWith(`${M.ultimo_mes.slice(0, 4)}-`)).map(d => mesDeFecha(d.fecha)));
+const ratioPeriodo = a => {
+  const filas = DATOS.serie.filter(d => new Date(d.fecha).getUTCFullYear() === a && mesDeFecha(d.fecha) <= mesesComparables);
+  return suma(filas.filter(d => d.tramite === "transferencia").map(d => d.tramites)) / suma(filas.filter(d => d.tramite === "matriculacion").map(d => d.tramites));
+};
+const aniosTodos = [...new Set(DATOS.serie.map(d => new Date(d.fecha).getUTCFullYear()))];
+$("texto-ratio").textContent =
+  `Por cada turismo matriculado (nuevo o importado de segunda mano) hubo ${num(ratio, 1)} cambios de titularidad en ${anio}, frente a ${num(ratioPrevio, 1)} en ${anioPrevio}. ` +
+  `Comparando solo los primeros ${mesesComparables} meses de cada año: ` + aniosTodos.map(a => `${num(ratioPeriodo(a), 2)} en ${a}`).join(", ") + ". " +
+  `El cociente baja cuando las matriculaciones crecen más deprisa que el mercado de ocasión.`;
+$("pie-ratio").textContent = `Cambios de titularidad de turismos divididos entre matriculaciones de turismos, cada mes (DGT). Una compraventa con concesionario cuenta como dos cambios.`;
+
+// Combustible
+const electrif = [];
+for (const d of DATOS.combustible.filter(d => d.tramite === "matriculacion" || d.tramite === "transferencia")) {
+  if (!ELECTRIFICADOS.includes(d.combustible)) continue;
+  let fila = electrif.find(e => e.fecha === d.fecha && e.tramite === d.tramite);
+  if (!fila) { fila = { fecha: d.fecha, tramite: d.tramite, tramites: 0 }; electrif.push(fila); }
+  fila.tramites += d.tramites;
+}
+const totalesMes = {};
+for (const d of DATOS.combustible) totalesMes[d.tramite + d.fecha] = (totalesMes[d.tramite + d.fecha] || 0) + d.tramites;
+const cuotaMensual = electrif.map(e => ({ ...e, fecha: fecha(e.fecha), cuota: 100 * e.tramites / totalesMes[e.tramite + e.fecha] }));
+const diesel = t => cuota(t, anio, ["diesel"]);
+$("texto-combustible").textContent =
+  `El mercado de ocasión va por detrás del de los coches nuevos, porque vende lo que se matriculó años atrás. En ${anio}, el diésel fue el ${pct(diesel("transferencia"))} de los cambios de titularidad y solo el ${pct(diesel("matriculacion"))} de las matriculaciones; ` +
+  `los coches híbridos, enchufables y eléctricos, el ${pct(cuota("transferencia", anio, ELECTRIFICADOS), 1)} de los cambios de titularidad y el ${pct(cuota("matriculacion", anio, ELECTRIFICADOS), 1)} de las matriculaciones.`;
+$("pie-electrif").textContent = `Porcentaje de los trámites de turismos que corresponde a híbridos, híbridos enchufables y eléctricos, cada mes (DGT). Un híbrido figura en el registro como gasolina o diésel, así que se identifica por su categoría de vehículo eléctrico.`;
+const cuotaComb = (t, c) => cuota(t, anio, c === "otros" ? ["otros", "desconocido"] : [c]);
+$("tabla-combustible").innerHTML =
+  `<thead><tr><th>Combustible</th><th>Cambios de titularidad ${anio}</th><th>Matriculaciones ${anio}</th></tr></thead><tbody>` +
+  COMBS.filter(c => c !== "otros").map(c => `<tr><td>${NOMBRE_COMB[c]}</td><td>${pct(cuotaComb("transferencia", c), 1)}</td><td>${pct(cuotaComb("matriculacion", c), 1)}</td></tr>`).join("") +
+  `</tbody>`;
+$("pie-tabla-combustible").textContent = `Porcentaje de los trámites de turismos de ${anio} por combustible (DGT). El resto, menos del 0,1 %, son otros combustibles o sin dato.`;
+
+// Antigüedad
+const tramosAnio = DATOS.antiguedad_anual.filter(d => d.anio === anio && d.tramo !== "sin_dato");
+const totalTramos = suma(tramosAnio.map(d => d.tramites));
+const parte = t => 100 * (tramosAnio.find(d => d.tramo === t)?.tramites ?? 0) / totalTramos;
+const sinDato = DATOS.antiguedad_anual.find(d => d.anio === anio && d.tramo === "sin_dato")?.tramites ?? 0;
+$("texto-antiguedad").textContent =
+  `Un coche tiene de media unos ${num(edadMediaMensual(anio), 1)} años cuando cambia de titular. El ${pct(parte("0_2"))} tiene menos de tres años y el ${pct(parte("10_14") + parte("15_19") + parte("20_o_mas"))} diez o más; ` +
+  `el ${pct(parte("20_o_mas"), 1)} supera los veinte. En ${anioPrevio} la media fue de ${num(edadMediaMensual(anioPrevio), 1)} años.`;
+$("pie-antiguedad").textContent = `Porcentaje de los cambios de titularidad de ${anio} por años cumplidos desde la matriculación del coche (DGT)` + (sinDato ? `; no se conoce la antigüedad de ${num(sinDato)} trámites.` : ".");
+
+// Modelos
+const totalMarca = suma(DATOS.marcas.map(d => d.tramites));
+$("texto-modelos").textContent =
+  `En ${anio}, ${titulo(DATOS.modelos[0].marca)} ${titulo(DATOS.modelos[0].modelo)} fue el modelo con más cambios de titularidad (${num(DATOS.modelos[0].tramites)}), seguido de ${titulo(DATOS.modelos[1].marca)} ${titulo(DATOS.modelos[1].modelo)} y ${titulo(DATOS.modelos[2].marca)} ${titulo(DATOS.modelos[2].modelo)}. ` +
+  `Por marcas, ${lista(DATOS.marcas.slice(0, 3).map(m => titulo(m.marca)))} encabezan la lista, con el ${pct(100 * suma(DATOS.marcas.slice(0, 3).map(m => m.tramites)) / transf)} de todos los cambios de titularidad de turismos.`;
+$("tabla-modelos").innerHTML =
+  `<thead><tr><th>Modelo</th><th>Cambios de titularidad ${anio}</th><th>Antigüedad media</th></tr></thead><tbody>` +
+  DATOS.modelos.map(m => `<tr><td>${titulo(m.marca)} ${titulo(m.modelo)}</td><td>${num(m.tramites)}</td><td>${num(m.antiguedad_media, 1)} años</td></tr>`).join("") +
+  `</tbody>`;
+$("pie-tabla-modelos").textContent = `Familia de modelo tal como la registra la DGT, sin la versión ni la cilindrada que el registro añade al nombre: «Golf» agrupa todos los Golf, y las series de BMW y las clases de Mercedes se agrupan en una. Algunas denominaciones comerciales se reparten en dos nombres en el registro.`;
+
+// Provincias
+const prov = DATOS.provincias;
+const masJoven = prov.reduce((a, b) => (b.antiguedad_media < a.antiguedad_media ? b : a)), masVieja = prov.reduce((a, b) => (b.antiguedad_media > a.antiguedad_media ? b : a));
+const mu = prov.find(p => p.provincia_id === "MU");
+$("texto-provincias").textContent =
+  `Entre las provincias de la tabla, los coches cambian de manos con ${num(masJoven.antiguedad_media, 1)} años de media en ${masJoven.provincia} y con ${num(masVieja.antiguedad_media, 1)} en ${masVieja.provincia}. ` +
+  (mu ? `En la provincia de Murcia hubo ${num(mu.tramites)} cambios de titularidad en ${anio} (puesto ${mu.puesto}), con una antigüedad media de ${num(mu.antiguedad_media, 1)} años y un ${pct(mu.pct_electrificados, 1)} de híbridos, enchufables y eléctricos.` : "");
+$("tabla-provincias").innerHTML =
+  `<thead><tr><th>Provincia</th><th>Cambios de titularidad</th><th>Antigüedad media</th><th class="ocultar-movil">Híbridos y eléctricos</th><th class="ocultar-movil">Diésel</th></tr></thead><tbody>` +
+  prov.map(p => `<tr${p.provincia_id === "MU" ? ' class="resaltada"' : ""}><td>${p.provincia}</td><td>${num(p.tramites)}</td><td>${num(p.antiguedad_media, 1)} años</td><td class="ocultar-movil">${pct(p.pct_electrificados, 1)}</td><td class="ocultar-movil">${pct(p.pct_diesel, 1)}</td></tr>`).join("") +
+  `</tbody>`;
+$("pie-tabla-provincias").textContent = `Cambios de titularidad de turismos en ${anio} por provincia del domicilio del vehículo (DGT). Sin ponderar por población: las provincias más pobladas encabezan la lista.`;
+
+// Precios
+$("texto-precios").textContent =
+  `No existe una fuente oficial y abierta con el precio en euros de los coches de segunda mano. Lo que sí publica Eurostat cada mes es un índice de precios armonizado (2025 = 100). ` +
+  `En ${mesTexto(pSegunda.fecha.slice(0, 7))} los coches de segunda mano marcan ${num(pSegunda.indice, 1)}: ${conSigno(pSegunda.variacion_anual, 1)} frente al mismo mes del año anterior, ` +
+  `contra ${conSigno(pNuevos.variacion_anual, 1)} de los nuevos y ${conSigno(pGeneral.variacion_anual, 1)} del conjunto de los precios de consumo. ` +
+  `El índice dice cuánto sube o baja el precio de un coche tipo entre dos fechas, no cuánto cuesta.`;
+$("pie-precios").textContent = `Índice de precios de consumo armonizado de Eurostat, España, base 2025 = 100 (ECOICOP 2: 07.1.1.2, 07.1.1.1 y total).`;
+
+// Bajas
+const totalBajasAnio = suma(delAnio(DATOS.bajas, anio).map(d => d.tramites));
+const bajasMotivoAnio = m => suma(delAnio(DATOS.bajas.filter(d => d.motivo === m), anio).map(d => d.tramites));
+const otrosMeses = DATOS.bajas.filter(d => d.motivo === "otros_motivos").sort((a, b) => b.tramites - a.tramites);
+const mediana = xs => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+const picoOtros = otrosMeses[0], tipicoOtros = mediana(otrosMeses.map(d => d.tramites));
+$("texto-bajas").textContent =
+  `En ${anio} se dieron de baja definitiva ${num(totalBajasAnio)} turismos: el ${pct(100 * bajasMotivoAnio("voluntaria") / totalBajasAnio)} por baja voluntaria, el ${pct(100 * bajasMotivoAnio("exportacion") / totalBajasAnio)} por exportación y el ${pct(100 * bajasMotivoAnio("de_oficio") / totalBajasAnio)} de oficio. ` +
+  `Hay un mes que no se parece a ningún otro: en ${mesTexto(fechaIso(picoOtros.fecha).slice(0, 7))} figuran ${num(picoOtros.tramites)} bajas por «otros motivos», frente a unas ${num(tipicoOtros)} en un mes normal. ` +
+  `La fuente no explica ese pico y la tabla estadística de la propia DGT lo recoge, así que se mantiene en los datos, con su motivo aparte.`;
+$("pie-bajas").textContent = `Bajas definitivas de turismos por mes y motivo (DGT). No incluye la baja temporal, que no saca el coche del parque.`;
+
+// Histórico
+const hist = DATOS.historico;
+const turHist = hist.filter(d => d.grupo === "turismos");
+const desde2000 = turHist.filter(d => d.anio >= 2000);
+const minHist = desde2000.reduce((a, b) => (b.valor < a.valor ? b : a)), picoPrevio = turHist.slice(0, -1).reduce((a, b) => (b.valor > a.valor ? b : a));
+const ultimoHist = turHist.at(-1), primerHist = turHist[0];
+$("texto-historico").textContent =
+  `Los cambios de titularidad de turismos pasaron de ${num(primerHist.valor / 1e6, 2)} millones en ${primerHist.anio} a ${num(ultimoHist.valor / 1e6, 2)} en ${ultimoHist.anio}, la cifra más alta de la serie` +
+  (ultimoHist.valor > picoPrevio.valor ? `; hasta entonces el máximo era de ${num(picoPrevio.valor / 1e6, 2)} millones, en ${picoPrevio.anio}. ` : ". ") +
+  `Desde 2000, el mínimo fue de ${num(minHist.valor / 1e6, 2)} millones en ${minHist.anio}.`;
+$("pie-historico").textContent = `Cambios de titularidad por año y tipo de vehículo, ${primerHist.anio}–${ultimoHist.anio} (serie histórica de la DGT).`;
+
+// Calidad
+const q = DATOS.cuadre;
+$("texto-cuadre").innerHTML =
+  `Los microdatos de la DGT se comparan con las tablas estadísticas que la propia DGT publica. En los ${num(q.meses_transferencias)} meses para los que hay tabla (${mesTexto(q.primer_mes)} a ${mesTexto(q.ultimo_mes)}), ` +
+  `los cambios de titularidad de turismos coinciden con una diferencia máxima del ${pct(q.dif_max_transferencias, 2)} (media: ${pct(q.dif_media_transferencias, 2)}); las bajas definitivas, con un ${pct(q.dif_max_bajas, 2)} como máximo ` +
+  (q.excepciones_bajas.length ? `salvo en ${q.excepciones_bajas.length} meses, en los que los microdatos tienen más bajas que la tabla (${q.excepciones_bajas.map(e => `${mesTexto(e.mes)}, ${conSigno(e.dif, 1)}`).join("; ")}) sin que la fuente lo explique.` : ".");
+$("texto-tardios").textContent =
+  `en un mes ya cerrado, el ${pct(DATOS.tardios.pct_transferencias_en_fichero_posterior, 1)} de los cambios de titularidad llegó en un fichero posterior al de su mes.`;
+
+// ---------- Gráficos ----------
+const base = { style: { fontFamily: "IBM Plex Sans, system-ui, sans-serif", fontSize: "12px", background: "transparent", overflow: "visible" } };
+const ancho = d => (DESTACADO.has(d) ? 2.5 : 1.6);
+const banda = datos => {
+  const prov = datos.filter(d => d.provisional).map(d => d.fecha);
+  return prov.length ? [{ x1: d3.min(prov), x2: d3.utcMonth.offset(d3.max(prov), 1) }] : [];
+};
+const mil = v => (v === 0 ? "0" : `${num(v / 1000)} mil`);
+
+function graficoSerie(w, c) {
+  return Plot.plot({
+    ...base, width: w, height: 320, marginLeft: 48, marginRight: 8,
+    x: { type: "utc", label: null, tickFormat: d3.utcFormat("%Y"), ticks: w < 500 ? "2 years" : "year" },
+    y: { grid: true, label: "trámites al mes", tickFormat: mil, domain: [0, d3.max(serie, d => d.tramites) * 1.05] },
+    color: { domain: ["transferencia", "matriculacion"], range: [c.acento, c.oscuro] },
+    marks: [
+      Plot.rectX(banda(serie), { x1: "x1", x2: "x2", fill: c.hueco }),
+      Plot.line(serie, { x: "fecha", y: "tramites", stroke: "tramite", strokeWidth: d => ancho(d.tramite) }),
+      Plot.tip(serie, Plot.pointerX({ x: "fecha", y: "tramites", title: d => `${NOMBRE_TRAMITE[d.tramite]} · ${MESES_LARGO[d.fecha.getUTCMonth()]} ${d.fecha.getUTCFullYear()}\n${num(d.tramites)}${d.provisional ? " (provisional)" : ""}` })),
+    ],
+  });
+}
+
+function graficoRatio(w, c) {
+  const meses = [...new Set(serie.map(d => d.fecha.getTime()))].sort((a, b) => a - b);
+  const datos = meses.map(t => {
+    const fila = serie.filter(d => d.fecha.getTime() === t);
+    const a = fila.find(d => d.tramite === "transferencia"), b = fila.find(d => d.tramite === "matriculacion");
+    return { fecha: new Date(t), ratio: a.tramites / b.tramites, provisional: a.provisional };
+  });
+  return Plot.plot({
+    ...base, width: w, height: 260, marginLeft: 36, marginRight: 8,
+    x: { type: "utc", label: null, tickFormat: d3.utcFormat("%Y"), ticks: w < 500 ? "2 years" : "year" },
+    y: { grid: true, label: "cambios por matriculación", tickFormat: v => num(v, 1), domain: [0, Math.ceil(d3.max(datos, d => d.ratio))] },
+    marks: [
+      Plot.rectX(banda(datos), { x1: "x1", x2: "x2", fill: c.hueco }),
+      Plot.line(datos, { x: "fecha", y: "ratio", stroke: c.acento, strokeWidth: 2.2 }),
+      Plot.tip(datos, Plot.pointerX({ x: "fecha", y: "ratio", title: d => `${MESES_LARGO[d.fecha.getUTCMonth()]} ${d.fecha.getUTCFullYear()}\n${num(d.ratio, 2)} cambios por matriculación${d.provisional ? " (provisional)" : ""}` })),
+    ],
+  });
+}
+
+function graficoElectrif(w, c) {
+  return Plot.plot({
+    ...base, width: w, height: 280, marginLeft: 36, marginRight: 8,
+    x: { type: "utc", label: null, tickFormat: d3.utcFormat("%Y"), ticks: w < 500 ? "2 years" : "year" },
+    y: { grid: true, label: "% de los trámites", tickFormat: v => num(v), domain: [0, Math.ceil(d3.max(cuotaMensual, d => d.cuota) / 10) * 10] },
+    color: { domain: ["transferencia", "matriculacion"], range: [c.acento, c.oscuro] },
+    marks: [
+      Plot.line(cuotaMensual, { x: "fecha", y: "cuota", stroke: "tramite", strokeWidth: d => ancho(d.tramite) }),
+      Plot.tip(cuotaMensual, Plot.pointerX({ x: "fecha", y: "cuota", title: d => `${NOMBRE_TRAMITE[d.tramite]} · ${MESES_LARGO[d.fecha.getUTCMonth()]} ${d.fecha.getUTCFullYear()}\n${pct(d.cuota, 1)} electrificados` })),
+    ],
+  });
+}
+
+function graficoAntiguedad(w, c) {
+  const datos = TRAMOS.map(t => ({ tramo: NOMBRE_TRAMO[t], pct: parte(t) }));
+  return Plot.plot({
+    ...base, width: w, height: 260, marginLeft: 36, marginRight: 8,
+    x: { label: "años desde la matriculación", domain: datos.map(d => d.tramo) },
+    y: { grid: true, label: "% de los cambios", tickFormat: v => num(v), domain: [0, Math.ceil(d3.max(datos, d => d.pct) / 5) * 5] },
+    marks: [
+      Plot.barY(datos, { x: "tramo", y: "pct", fill: c.acento }),
+      Plot.text(datos, { x: "tramo", y: "pct", text: d => pct(d.pct), dy: -8, fill: c.suave }),
+    ],
+  });
+}
+
+function graficoPrecios(w, c) {
+  const datos = DATOS.precios.filter(d => d.territorio === "espana").map(d => ({ ...d, fecha: fecha(d.fecha) }));
+  return Plot.plot({
+    ...base, width: w, height: 300, marginLeft: 36, marginRight: 8,
+    x: { type: "utc", label: null, tickFormat: d3.utcFormat("%Y"), ticks: w < 500 ? "2 years" : "year" },
+    y: { grid: true, label: "índice (2025 = 100)", tickFormat: v => num(v) },
+    color: { domain: PRODUCTOS, range: PRODUCTOS.map(p => colorDe(p, c)) },
+    marks: [
+      Plot.ruleY([100], { stroke: c.suave, strokeDasharray: "3,3" }),
+      Plot.line(datos, { x: "fecha", y: "indice", stroke: "producto", strokeWidth: d => ancho(d.producto) }),
+      Plot.tip(datos, Plot.pointerX({ x: "fecha", y: "indice", title: d => `${NOMBRE_PRODUCTO[d.producto]} · ${MESES_LARGO[d.fecha.getUTCMonth()]} ${d.fecha.getUTCFullYear()}\nÍndice ${num(d.indice, 1)}${d.variacion_anual != null ? ` (${conSigno(d.variacion_anual, 1)} interanual)` : ""}` })),
+    ],
+  });
+}
+
+function graficoBajas(w, c) {
+  const datos = DATOS.bajas.map(d => ({ ...d, fecha: fecha(d.fecha) }));
+  // El pico atípico aplastaría el resto: el eje llega a lo normal y el pico se marca fuera de escala.
+  const resto = datos.filter(d => d.tramites !== picoOtros.tramites);
+  const tope = Math.ceil(d3.max(resto, d => d.tramites) * 1.15 / 20000) * 20000;
+  return Plot.plot({
+    ...base, width: w, height: 300, marginLeft: 48, marginRight: 8,
+    x: { type: "utc", label: null, tickFormat: d3.utcFormat("%Y"), ticks: w < 500 ? "2 years" : "year" },
+    y: { grid: true, label: "bajas al mes", tickFormat: mil, domain: [0, tope] },
+    color: { domain: MOTIVOS, range: MOTIVOS.map(m => colorDe(m, c)) },
+    marks: [
+      Plot.line(datos, { x: "fecha", y: "tramites", stroke: "motivo", strokeWidth: d => ancho(d.motivo), clip: true }),
+      Plot.text([{ fecha: fecha(picoOtros.fecha), y: tope }], { x: "fecha", y: "y", text: [`▲ ${num(picoOtros.tramites)} por «otros motivos» (fuera de escala)`], textAnchor: "start", dx: 6, dy: 10, fill: c.suave }),
+      Plot.tip(datos, Plot.pointerX({ x: "fecha", y: "tramites", title: d => `${NOMBRE_MOTIVO[d.motivo]} · ${MESES_LARGO[d.fecha.getUTCMonth()]} ${d.fecha.getUTCFullYear()}
+${num(d.tramites)} bajas` })),
+    ],
+  });
+}
+
+function graficoHistorico(w, c) {
+  const datos = hist;
+  return Plot.plot({
+    ...base, width: w, height: 300, marginLeft: 44, marginRight: 8,
+    x: { label: null, tickFormat: d => String(d), ticks: w < 500 ? 5 : 8 },
+    y: { grid: true, label: "cambios de titularidad", tickFormat: v => (v === 0 ? "0" : `${num(v / 1e6, 1)} M`) },
+    color: { domain: Object.keys(NOMBRE_GRUPO), range: Object.keys(NOMBRE_GRUPO).map(g => colorDe(g, c)) },
+    marks: [
+      Plot.line(datos, { x: "anio", y: "valor", stroke: "grupo", strokeWidth: d => ancho(d.grupo) }),
+      Plot.tip(datos, Plot.pointerX({ x: "anio", y: "valor", title: d => `${NOMBRE_GRUPO[d.grupo]} · ${d.anio}\n${num(d.valor)}` })),
+    ],
+  });
+}
+
+leyenda("leyenda-serie", ["transferencia", "matriculacion"], NOMBRE_TRAMITE);
+leyenda("leyenda-electrif", ["transferencia", "matriculacion"], NOMBRE_TRAMITE);
+leyenda("leyenda-precios", PRODUCTOS, NOMBRE_PRODUCTO);
+leyenda("leyenda-bajas", MOTIVOS, NOMBRE_MOTIVO);
+leyenda("leyenda-historico", Object.keys(NOMBRE_GRUPO), NOMBRE_GRUPO);
+
+const GRAFICOS = [
+  ["g-serie", graficoSerie],
+  ["g-ratio", graficoRatio],
+  ["g-electrif", graficoElectrif],
+  ["g-antiguedad", graficoAntiguedad],
+  ["g-precios", graficoPrecios],
+  ["g-bajas", graficoBajas],
+  ["g-historico", graficoHistorico],
+];
+function dibujar() {
+  const c = colores();
+  // Ancho mínimo: en el primer dibujado el contenedor puede medir 0 y los márgenes
+  // dejarían anchos negativos.
+  for (const [id, fn] of GRAFICOS) { const cont = $(id); cont.replaceChildren(fn(Math.max(cont.clientWidth, 280), c)); }
+}
+dibujar();
+let espera;
+new ResizeObserver(() => { clearTimeout(espera); espera = setTimeout(dibujar, 150); }).observe($("g-serie"));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dibujar);
+</script>
+</body>
+</html>

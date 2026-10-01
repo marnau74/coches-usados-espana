@@ -1,0 +1,55 @@
+codigo_dgt,provincia,codigo_ine,comunidad
+VI,Araba/Álava,01,País Vasco
+AB,Albacete,02,Castilla-La Mancha
+A,Alicante/Alacant,03,Comunitat Valenciana
+AL,Almería,04,Andalucía
+AV,Ávila,05,Castilla y León
+BA,Badajoz,06,Extremadura
+IB,Balears (Illes),07,Illes Balears
+B,Barcelona,08,Cataluña
+BU,Burgos,09,Castilla y León
+CC,Cáceres,10,Extremadura
+CA,Cádiz,11,Andalucía
+CS,Castellón/Castelló,12,Comunitat Valenciana
+CR,Ciudad Real,13,Castilla-La Mancha
+CO,Córdoba,14,Andalucía
+C,Coruña (A),15,Galicia
+CU,Cuenca,16,Castilla-La Mancha
+GI,Girona,17,Cataluña
+GR,Granada,18,Andalucía
+GU,Guadalajara,19,Castilla-La Mancha
+SS,Gipuzkoa,20,País Vasco
+H,Huelva,21,Andalucía
+HU,Huesca,22,Aragón
+J,Jaén,23,Andalucía
+LE,León,24,Castilla y León
+L,Lleida,25,Cataluña
+LO,Rioja (La),26,La Rioja
+LU,Lugo,27,Galicia
+M,Madrid,28,Comunidad de Madrid
+MA,Málaga,29,Andalucía
+MU,Murcia,30,Región de Murcia
+NA,Navarra,31,Comunidad Foral de Navarra
+OU,Ourense,32,Galicia
+O,Asturias,33,Principado de Asturias
+P,Palencia,34,Castilla y León
+GC,Palmas (Las),35,Canarias
+PO,Pontevedra,36,Galicia
+SA,Salamanca,37,Castilla y León
+TF,Santa Cruz de Tenerife,38,Canarias
+S,Cantabria,39,Cantabria
+SG,Segovia,40,Castilla y León
+SE,Sevilla,41,Andalucía
+SO,Soria,42,Castilla y León
+T,Tarragona,43,Cataluña
+TE,Teruel,44,Aragón
+TO,Toledo,45,Castilla-La Mancha
+V,Valencia/València,46,Comunitat Valenciana
+VA,Valladolid,47,Castilla y León
+BI,Bizkaia,48,País Vasco
+ZA,Zamora,49,Castilla y León
+Z,Zaragoza,50,Aragón
+CE,Ceuta,51,Ceuta
+ML,Melilla,52,Melilla
+DS,Desconocido,,
+EX,Extranjero,,

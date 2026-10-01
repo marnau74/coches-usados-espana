@@ -1,0 +1,46 @@
+version: 2
+
+seeds:
+  - name: series_eurostat
+    description: >
+      Series de Eurostat que usa el proyecto (IPCA, ECOICOP 2, base 2025 = 100). La
+      ingesta descarga exactamente estas.
+    columns:
+      - name: id
+        data_tests: [unique, not_null]
+      - name: medida
+        data_tests:
+          - accepted_values:
+              arguments: {values: [indice, tasa_anual]}
+
+  - name: provincias
+    description: >
+      Códigos de provincia de la DGT (anexo I del diseño de registro) con su código INE y
+      su comunidad autónoma. DS (desconocido) y EX (extranjero) no son provincias.
+    columns:
+      - name: codigo_dgt
+        data_tests: [unique, not_null]
+
+  - name: tipos_vehiculo
+    description: >
+      Códigos de tipo de vehículo de la DGT (anexo I) y el grupo en el que los cuentan las
+      tablas estadísticas de la DGT. La agrupación se ha comprobado cuadrando los
+      microdatos con esas tablas (test assert_microdatos_cuadran_con_tablas_dgt).
+    columns:
+      - name: cod_tipo
+        data_tests: [unique, not_null]
+      - name: grupo
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [camiones, furgonetas, autobuses, turismos, motocicletas, tractores_industriales,
+                         remolques, ciclomotores, otros]
+
+  - name: combustibles
+    description: >
+      Tipos de combustible del proyecto. Se deducen del código de propulsión y de la
+      categoría de vehículo eléctrico de la DGT (ver int_dgt__tramites).
+    columns:
+      - name: combustible_id
+        data_tests: [unique, not_null]

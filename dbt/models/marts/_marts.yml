@@ -1,0 +1,195 @@
+version: 2
+
+models:
+  - name: dim_fecha
+    description: Un mes por fila. Los dos últimos están marcados como provisionales.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: fecha_id
+        data_type: integer
+        data_tests: [unique, not_null]
+      - name: mes
+        data_type: date
+        data_tests: [unique, not_null]
+      - name: anio
+        data_type: smallint
+      - name: mes_numero
+        data_type: smallint
+      - name: trimestre
+        data_type: smallint
+      - name: provisional
+        data_type: boolean
+        data_tests: [not_null]
+
+  - name: dim_provincia
+    description: Provincias (más «desconocida» y «extranjero») con su comunidad autónoma.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: provincia_id
+        description: Código de provincia de la DGT.
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: provincia
+        data_type: varchar
+      - name: comunidad
+        data_type: varchar
+      - name: codigo_ine
+        data_type: varchar
+
+  - name: dim_combustible
+    description: Combustible o tipo de propulsión.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: combustible_id
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: nombre
+        data_type: varchar
+      - name: orden
+        data_type: integer
+      - name: enchufable
+        data_type: boolean
+
+  - name: fct_tramites_mensual
+    description: >
+      Trámites de turismos (matriculaciones, cambios de titularidad y bajas definitivas) por
+      mes, provincia, combustible, antigüedad, tipo de titular y procedencia. Es un recuento
+      de trámites, no de coches distintos.
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [fecha_id, tramite, provincia_id, combustible_id, tramo_antiguedad, persona, procedencia, motivo_baja]
+    columns:
+      - name: fecha_id
+        data_type: integer
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_fecha'), field: fecha_id}}
+      - name: tramite
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [matriculacion, transferencia, baja]}}
+      - name: provincia_id
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_provincia'), field: provincia_id}}
+      - name: combustible_id
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_combustible'), field: combustible_id}}
+      - name: tramo_antiguedad
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: ["sin_dato", "0_2", "3_5", "6_9", "10_14", "15_19", "20_o_mas"]}}
+      - name: persona
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [fisica, juridica, desconocida]}}
+      - name: procedencia
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [nuevo, usado_importado, no_aplica]}}
+      - name: motivo_baja
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [voluntaria, desguace, de_oficio, exportacion, otros_motivos, no_aplica]}}
+      - name: tramites
+        data_type: integer
+        data_tests: [not_null, no_negativo]
+      - name: suma_antiguedad_anios
+        data_type: bigint
+      - name: tramites_con_antiguedad
+        data_type: integer
+
+  - name: fct_modelos_mensual
+    description: >
+      Trámites de turismos por marca, modelo (familia) y mes, para matriculaciones y cambios
+      de titularidad. Los modelos con menos de 12 trámites se agrupan en «OTROS».
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [fecha_id, tramite, marca, modelo]
+    columns:
+      - name: fecha_id
+        data_type: integer
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_fecha'), field: fecha_id}}
+      - name: tramite
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [matriculacion, transferencia]}}
+      - name: marca
+        data_type: varchar
+        data_tests: [not_null]
+      - name: modelo
+        data_type: varchar
+        data_tests: [not_null]
+      - name: tramites
+        data_type: integer
+        data_tests: [not_null, no_negativo]
+      - name: suma_antiguedad_anios
+        data_type: bigint
+      - name: tramites_con_antiguedad
+        data_type: integer
+
+  - name: fct_precios_indice_mensual
+    description: >
+      Índice de precios de consumo armonizado de Eurostat (base 2025 = 100). No es un precio
+      en euros.
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [fecha_id, territorio, producto]
+    columns:
+      - name: fecha_id
+        data_type: integer
+        data_tests: [not_null]
+      - name: territorio
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [espana, zona_euro]}}
+      - name: producto
+        data_type: varchar
+        data_tests:
+          - accepted_values: {arguments: {values: [automoviles_segunda_mano, automoviles_nuevos, general]}}
+      - name: indice
+        data_type: double
+        data_tests: [not_null]
+      - name: variacion_anual
+        data_type: double
+      - name: variacion_anual_calculada
+        data_type: double
+
+  - name: fct_titularidad_anual
+    description: Cambios de titularidad por año y tipo de vehículo desde 1990 (serie histórica de la DGT).
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [anio, grupo_vehiculo]
+    columns:
+      - name: anio
+        data_type: smallint
+        data_tests: [not_null]
+      - name: grupo_vehiculo
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [camiones_y_furgonetas, autobuses, turismos, motocicletas, tractores_industriales, remolques, otros]
+      - name: cambios_titularidad
+        data_type: bigint
+        data_tests: [not_null, no_negativo]

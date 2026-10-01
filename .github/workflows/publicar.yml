@@ -1,0 +1,118 @@
+name: publicar
+
+# Pipeline completo con datos reales y publicación:
+#   - web del informe y documentación de dbt en GitHub Pages (siempre);
+#   - release de datos datos-AAAA-MM (solo en la ejecución mensual o a mano).
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 20 * *"   # día 20 de cada mes: la DGT y Eurostat ya han publicado el mes anterior
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Instalar dependencias
+        run: uv sync --frozen
+      # Caché de las capas raw y bronze: los meses ya descargados de la DGT y sus Parquet no
+      # se vuelven a pedir ni a convertir (solo los dos últimos publicados, que se revisan).
+      - uses: actions/cache@v6
+        with:
+          path: |
+            data/raw
+            data/bronze
+          key: datos-${{ github.run_id }}
+          restore-keys: datos-
+      - name: Pipeline completo con Dagster (descarga, bronze, silver, gold y comprobaciones)
+        run: uv run dagster job execute -m coches_usados.definitions -j pipeline_mensual
+      - name: Web del informe (desde gold)
+        run: uv run python -m coches_usados.report.build_site
+      - name: Documentación de dbt (con el grafo de linaje)
+        run: |
+          uv run dbt docs generate --project-dir dbt --profiles-dir dbt --static
+          mkdir -p site/docs
+          cp dbt/target/static_index.html site/docs/index.html
+      - name: Paquete de datos (gold en Parquet y DuckDB, contrato y sumas)
+        run: uv run python -m coches_usados.release
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release
+          path: release/
+          retention-days: 7
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  publicar-web:
+    needs: construir
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v5
+
+  publicar-datos:
+    needs: construir
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # crear la release y subir sus ficheros
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+          path: release
+      - name: Crear o actualizar la release datos-AAAA-MM
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          etiqueta="datos-$(date -u +%Y-%m)"
+          version=$(jq -r .version_contrato release/contrato.json)
+          desde=$(jq -r .periodo.desde release/contrato.json)
+          hasta=$(jq -r .periodo.hasta release/contrato.json)
+          provisional=$(jq -r .provisional_desde release/contrato.json)
+          tablas=$(jq -r '.tablas | to_entries | map("| `\(.key)` | \(.value.filas) |") | join("\n")' release/contrato.json)
+          cat > notas.md <<NOTAS
+          Trámites de turismos en España (matriculaciones, cambios de titularidad y bajas) de **${desde}** a **${hasta}** (provisionales desde ${provisional}) y precios de Eurostat, capa gold del modelo en estrella.
+
+          | Tabla | Filas |
+          |---|--:|
+          ${tablas}
+
+          - \`*.parquet\`: una tabla por fichero.
+          - \`coches_usados.duckdb\`: todas las tablas en el esquema \`gold\`.
+          - \`contrato.json\`: contrato **${version}** (tablas, columnas y tipos).
+          - \`SHA256SUMS\`: comprueba la descarga con \`sha256sum -c SHA256SUMS\`.
+
+          Datos de la DGT bajo licencia CC BY 4.0; Eurostat, con cita de la fuente.
+          Documentación y linaje: https://marnau74.github.io/coches-usados-espana/docs/
+          NOTAS
+          if gh release view "$etiqueta" >/dev/null 2>&1; then
+            gh release upload "$etiqueta" release/* --clobber
+            gh release edit "$etiqueta" --notes-file notas.md
+          else
+            # --latest=false: la release destacada del repositorio es la del código (vX.Y.Z)
+            gh release create "$etiqueta" release/* --title "Datos ${hasta}" --notes-file notas.md --latest=false
+          fi
