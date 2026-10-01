@@ -17,6 +17,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - `publicar` ya no se lanza con cualquier cambio en `main`, solo si afecta a los datos o al informe,
   y solo guarda una caché nueva (3 GB) cuando cambian los ficheros de la DGT, no en cada ejecución.
 
+### Seguridad
+- Las acciones de GitHub van fijadas por SHA (con la versión en un comentario) en lugar de por
+  etiqueta, que su autor puede mover; Dependabot las actualiza agrupadas.
+
 ## [1.0.0] - 2026-10-01
 
 Primera versión: plataforma de datos del mercado de coches de segunda mano en España con
