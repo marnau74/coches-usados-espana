@@ -137,8 +137,24 @@ class DgtClient:
         self._dormir = dormir
 
     def meses_publicados(self, tipo: TipoTramite) -> list[tuple[int, int]]:
-        respuesta = self.sesion.get(LISTADOS.format(pagina=tipo.pagina), timeout=TIEMPO_MAXIMO)
-        respuesta.raise_for_status()
+        """Meses que el listado oficial enlaza para ese tipo de trámite. El servidor devuelve a
+        veces errores 500 a ráfagas, así que se reintenta con espera creciente."""
+        url = LISTADOS.format(pagina=tipo.pagina)
+        ultimo_error: Exception | None = None
+        for intento in range(1, self.intentos + 1):
+            try:
+                respuesta = self.sesion.get(url, timeout=TIEMPO_MAXIMO)
+                respuesta.raise_for_status()
+                break
+            except requests.RequestException as e:
+                ultimo_error = e
+                log.warning("Intento %d/%d del listado de %s: %s", intento, self.intentos, tipo.nombre, e)
+                if intento < self.intentos:
+                    self._dormir(self.espera * intento)
+        else:
+            raise RuntimeError(
+                f"No se ha podido leer el listado de {tipo.nombre} tras {self.intentos} intentos"
+            ) from ultimo_error
         meses = meses_del_listado(respuesta.text, tipo)
         if not meses:
             raise ValueError(f"El listado de {tipo.nombre} no enlaza ningún fichero: ¿ha cambiado la página?")
@@ -215,7 +231,14 @@ def ingerir_microdatos(
     for anio, mes in publicados:
         ruta = carpeta / f"{nombre_fichero(tipo, anio, mes)}.zip"
         if (anio, mes) in revisar or not ruta.exists():
-            ruta, cambiado = cliente.descargar_mes(tipo, anio, mes, carpeta)
+            try:
+                ruta, cambiado = cliente.descargar_mes(tipo, anio, mes, carpeta)
+            except RuntimeError:
+                # Un mes ya descargado se puede seguir usando si su revisión falla; uno que falta, no.
+                if not ruta.exists():
+                    raise
+                log.warning("No se ha podido revisar %s %d-%02d: se conserva la copia anterior", tipo.nombre, anio, mes)
+                cambiado = False
             log.info("%s %d-%02d: %s", tipo.nombre, anio, mes, "descargado" if cambiado else "sin cambios")
         ficheros.append(ruta)
     return ficheros

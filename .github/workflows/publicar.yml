@@ -29,9 +29,12 @@ jobs:
           enable-cache: true
       - name: Instalar dependencias
         run: uv sync --frozen
-      # Caché de las capas raw y bronze: los meses ya descargados de la DGT y sus Parquet no
-      # se vuelven a pedir ni a convertir (solo los dos últimos publicados, que se revisan).
-      - uses: actions/cache@v6
+      # Caché de las capas raw y bronze: los meses ya descargados de la DGT y sus Parquet no se
+      # vuelven a pedir ni a convertir (solo los dos últimos publicados, que se revisan). Se
+      # guarda también si el pipeline falla: el servidor de la DGT da errores a ráfagas y así cada
+      # intento aprovecha lo que ya se descargó en el anterior.
+      - uses: actions/cache/restore@v6
+        id: cache
         with:
           path: |
             data/raw
@@ -40,6 +43,13 @@ jobs:
           restore-keys: datos-
       - name: Pipeline completo con Dagster (descarga, bronze, silver, gold y comprobaciones)
         run: uv run dagster job execute -m coches_usados.definitions -j pipeline_mensual
+      - uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: |
+            data/raw
+            data/bronze
+          key: datos-${{ github.run_id }}
       - name: Web del informe (desde gold)
         run: uv run python -m coches_usados.report.build_site
       - name: Documentación de dbt (con el grafo de linaje)

@@ -29,7 +29,11 @@ línea. Tres detalles hacen que una lectura ingenua pierda o desplace datos sin 
   fichero esperado y que no está vacío) antes de aceptarlo.
 - Los meses que existen se leen del **listado oficial** de cada tipo, no se suponen. Un listado sin
   enlaces es un error (la página ha cambiado).
-- Cada descarga se reintenta con espera creciente, también ante un 404 de un fichero listado.
+- Cada descarga, y también la lectura del listado, se reintenta con espera creciente (20 s de base
+  en el pipeline), incluso ante un 404 de un fichero listado: el servidor da errores 500 a
+  ráfagas, sobre todo desde GitHub Actions. Si falla la revisión de un mes que ya se tenía, se
+  conserva la copia; si falla uno que no se tenía, se detiene. La caché de la publicación se guarda
+  aunque el trabajo falle, para que cada intento aproveche lo ya descargado.
 - Las **tablas anuales**, que no cambian una vez publicadas, no se descargan en cada ejecución:
   las de los años ya conocidos están guardadas en `datos_de_referencia/` (ficheros oficiales sin
   modificar) y solo se descargan las de años nuevos. Hubo que hacerlo así porque el servidor de la

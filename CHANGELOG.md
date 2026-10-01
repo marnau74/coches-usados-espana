@@ -22,5 +22,5 @@ datos oficiales.
   con una diferencia máxima del 0,13 % en 24 meses (ADR 0005).
 - Informe web con todas las cifras calculadas desde gold, documentación con el linaje de los datos
   y release mensual (`datos-AAAA-MM`) con Parquet, DuckDB, contrato y sumas SHA-256.
-- 100 comprobaciones de dbt, 84 tests de Python y CI con datos sintéticos de formato idéntico al
+- 100 comprobaciones de dbt, 92 tests de Python y CI con datos sintéticos de formato idéntico al
   real.

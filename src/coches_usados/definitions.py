@@ -41,6 +41,10 @@ os.environ.setdefault("COCHES_WAREHOUSE", str(RAIZ / "data" / "warehouse.duckdb"
 # Primer mes de microdatos que se descarga (coincide con la variable inicio_ventana de dbt).
 DESDE = (2024, 1)
 
+# Segundos base entre reintentos con la DGT: su servidor da errores 500 a ráfagas, sobre todo
+# desde GitHub Actions, y conviene esperar más de lo habitual antes de rendirse.
+ESPERA_DGT = 20.0
+
 DBT_PROYECTO = DbtProject(project_dir=RAIZ / "dbt", profiles_dir=RAIZ / "dbt")
 DBT_PROYECTO.prepare_if_dev()
 if not DBT_PROYECTO.manifest_path.exists():
@@ -77,7 +81,7 @@ class Rutas(dg.ConfigurableResource):
 def raw_dgt_microdatos(rutas: Rutas) -> dg.MaterializeResult:
     """ZIP mensuales de matriculaciones, transferencias y bajas de la DGT. Los meses ya
     descargados no se piden de nuevo, salvo los dos últimos publicados."""
-    cliente = dgt.DgtClient()
+    cliente = dgt.DgtClient(espera=ESPERA_DGT)
     ficheros = {
         tipo.nombre: len(dgt.ingerir_microdatos(cliente, tipo, DESDE, Path(rutas.raw) / "dgt" / tipo.nombre))
         for tipo in dgt.TIPOS.values()
@@ -91,7 +95,11 @@ def raw_dgt_tablas(rutas: Rutas) -> dg.MaterializeResult:
     DGT publica cada año el anterior, así que se piden hasta el del año pasado; las que ya
     están descargadas o guardadas en el repositorio (`datos_de_referencia/`) no se piden."""
     ficheros = dgt.ingerir_tablas(
-        dgt.DgtClient(), Path(rutas.raw) / "dgt_tablas", DESDE[0], date.today().year - 1, respaldo=REFERENCIA_DGT
+        dgt.DgtClient(espera=ESPERA_DGT),
+        Path(rutas.raw) / "dgt_tablas",
+        DESDE[0],
+        date.today().year - 1,
+        respaldo=REFERENCIA_DGT,
     )
     return dg.MaterializeResult(metadata={"ficheros": len(ficheros)})
 

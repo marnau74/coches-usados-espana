@@ -282,3 +282,39 @@ def test_el_respaldo_del_repositorio_tiene_las_tablas_que_usa_el_pipeline():
         assert f"transferencias_tablas_{anio}.xlsx" in nombres
         assert f"bajas_tablas_{anio}.xlsx" in nombres
     assert "transferencias_series_2025.xlsx" in nombres
+
+
+def test_el_listado_se_reintenta_ante_errores_500_con_espera_creciente():
+    pagina = dgt.LISTADOS.format(pagina=TRF.pagina)
+    c, dormidas = cliente(
+        {pagina: [RespuestaFalsa(500), RespuestaFalsa(500), RespuestaFalsa(200, texto=LISTADO)]}, intentos=4
+    )
+    assert c.meses_publicados(TRF) == [(2024, 1), (2024, 2), (2024, 10)]
+    assert dormidas == [2.0, 4.0]
+
+
+def test_si_el_listado_no_responde_nunca_se_avisa():
+    pagina = dgt.LISTADOS.format(pagina=TRF.pagina)
+    c, _ = cliente({pagina: [RespuestaFalsa(500)]}, intentos=2)
+    with pytest.raises(RuntimeError, match="No se ha podido leer el listado"):
+        c.meses_publicados(TRF)
+
+
+def test_si_falla_la_revision_de_un_mes_ya_descargado_se_conserva_la_copia(tmp_path):
+    pagina = dgt.LISTADOS.format(pagina=TRF.pagina)
+    respuestas = {pagina: [RespuestaFalsa(200, texto=LISTADO)]}
+    for mes in (1, 2, 10):
+        respuestas[dgt.url_mes(TRF, 2024, mes)] = [RespuestaFalsa(200, zip_con(f"export_mensual_trf_2024{mes:02d}"))]
+    c, _ = cliente(respuestas)
+    dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path)
+    c.sesion.respuestas[dgt.url_mes(TRF, 2024, 10)] = [RespuestaFalsa(500)]
+    ficheros = dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path)
+    assert len(ficheros) == 3  # octubre falla al revisarlo, pero ya estaba
+
+
+def test_si_falla_un_mes_que_no_se_tenia_es_un_error(tmp_path):
+    pagina = dgt.LISTADOS.format(pagina=TRF.pagina)
+    respuestas = {pagina: [RespuestaFalsa(200, texto=LISTADO)], dgt.url_mes(TRF, 2024, 1): [RespuestaFalsa(500)]}
+    c, _ = cliente(respuestas)
+    with pytest.raises(RuntimeError, match="tras 3 intentos"):
+        dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path)
