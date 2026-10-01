@@ -29,6 +29,9 @@ línea. Tres detalles hacen que una lectura ingenua pierda o desplace datos sin 
   fichero esperado y que no está vacío) antes de aceptarlo.
 - Los meses que existen se leen del **listado oficial** de cada tipo, no se suponen. Un listado sin
   enlaces es un error (la página ha cambiado).
+  Si el listado no responde tras los reintentos, se prueban los meses esperados por el patrón de la
+  URL: los dos últimos pueden no estar publicados todavía y, si no se consiguen, se omiten; un mes
+  anterior que falte detiene la ejecución.
 - Cada descarga, y también la lectura del listado, se reintenta con espera creciente (20 s de base
   en el pipeline), incluso ante un 404 de un fichero listado: el servidor da errores 500 a
   ráfagas, sobre todo desde GitHub Actions. Si falla la revisión de un mes que ya se tenía, se

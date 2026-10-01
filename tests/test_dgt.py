@@ -1,4 +1,5 @@
 import zipfile
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -318,3 +319,29 @@ def test_si_falla_un_mes_que_no_se_tenia_es_un_error(tmp_path):
     c, _ = cliente(respuestas)
     with pytest.raises(RuntimeError, match="tras 3 intentos"):
         dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path)
+
+
+def test_los_meses_esperados_llegan_hasta_el_mes_anterior_al_actual():
+    assert dgt.meses_esperados((2024, 11), date(2025, 2, 10)) == [(2024, 11), (2024, 12), (2025, 1)]
+    assert dgt.meses_esperados((2025, 3), date(2025, 3, 1)) == []
+
+
+def _dgt_sin_listado(meses_publicados: tuple[int, ...]):
+    """DGT cuyo listado da 500 y en la que solo existen los meses indicados de 2024."""
+    pagina = dgt.LISTADOS.format(pagina=TRF.pagina)
+    respuestas = {pagina: [RespuestaFalsa(500)]}
+    for mes in meses_publicados:
+        respuestas[dgt.url_mes(TRF, 2024, mes)] = [RespuestaFalsa(200, zip_con(f"export_mensual_trf_2024{mes:02d}"))]
+    return cliente(respuestas, intentos=2)
+
+
+def test_sin_listado_se_usa_el_patron_de_la_url_y_los_dos_ultimos_meses_pueden_faltar(tmp_path):
+    c, _ = _dgt_sin_listado((1, 2, 3))  # hoy es junio: abril y mayo aún no están
+    ficheros = dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path, hoy=date(2024, 6, 20))
+    assert [f.name[-10:-4] for f in ficheros] == ["202401", "202402", "202403"]
+
+
+def test_sin_listado_un_mes_antiguo_que_falta_es_un_error(tmp_path):
+    c, _ = _dgt_sin_listado((1, 3, 4, 5))  # falta febrero, que no es de los dos últimos
+    with pytest.raises(RuntimeError, match="tras 2 intentos"):
+        dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path, hoy=date(2024, 6, 20))

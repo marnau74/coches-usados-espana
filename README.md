@@ -94,7 +94,7 @@ proyecto lo comprueba por varios caminos ([ADR 0005](docs/adr/0005-cuadre-con-la
 - **Los tests fallan cuando deben.** Los de cuadre tienen su propio test: se manipula una cifra
   de la tabla oficial y se comprueba que el test falla.
 
-100 comprobaciones de dbt y 92 tests de Python.
+100 comprobaciones de dbt y 95 tests de Python.
 
 ## Lo que este proyecto corrige de lecturas ingenuas de la misma fuente
 

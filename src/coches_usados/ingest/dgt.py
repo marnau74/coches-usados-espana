@@ -27,6 +27,7 @@ import shutil
 import time
 import zipfile
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 import requests
@@ -214,31 +215,57 @@ def _comprobar_xlsx(ruta: Path) -> None:
         raise FicheroNoValido(f"{ruta.name}: no es un fichero de Excel")
 
 
+def meses_esperados(desde: tuple[int, int], hoy: date) -> list[tuple[int, int]]:
+    """Meses desde `desde` hasta el anterior al actual, sin mirar ningún listado."""
+    meses, (anio, mes) = [], desde
+    while (anio, mes) < (hoy.year, hoy.month):
+        meses.append((anio, mes))
+        anio, mes = (anio + 1, 1) if mes == 12 else (anio, mes + 1)
+    return meses
+
+
 def ingerir_microdatos(
     cliente: DgtClient,
     tipo: TipoTramite,
     desde: tuple[int, int],
     carpeta: Path,
     revisar_ultimos: int = REVISAR_ULTIMOS,
+    hoy: date | None = None,
 ) -> list[Path]:
     """Descarga los meses publicados desde `desde` que falten en `carpeta`, más los
-    últimos `revisar_ultimos` publicados. Devuelve todos los ficheros del periodo."""
-    publicados = [m for m in cliente.meses_publicados(tipo) if m >= desde]
+    últimos `revisar_ultimos` publicados. Devuelve todos los ficheros del periodo.
+
+    Los meses salen del listado oficial. Si el listado no responde (el servidor da errores 500 a
+    ráfagas), se prueban los meses esperados por el patrón de URL: los dos últimos pueden no
+    estar publicados todavía y, si no se consiguen, se omiten sin error. Un mes ya descargado
+    cuya revisión falla conserva su copia."""
+    por_patron = False
+    try:
+        publicados = [m for m in cliente.meses_publicados(tipo) if m >= desde]
+    except RuntimeError:
+        log.warning("Sin listado de %s: se prueban los meses esperados por el patrón de la URL", tipo.nombre)
+        publicados, por_patron = meses_esperados(desde, hoy or date.today()), True
     if not publicados:
         raise ValueError(f"La DGT no tiene publicado ningún mes de {tipo.nombre} desde {desde}")
     revisar = set(publicados[-revisar_ultimos:]) if revisar_ultimos else set()
     ficheros = []
-    for anio, mes in publicados:
+    for posicion, (anio, mes) in enumerate(publicados):
         ruta = carpeta / f"{nombre_fichero(tipo, anio, mes)}.zip"
         if (anio, mes) in revisar or not ruta.exists():
             try:
                 ruta, cambiado = cliente.descargar_mes(tipo, anio, mes, carpeta)
             except RuntimeError:
                 # Un mes ya descargado se puede seguir usando si su revisión falla; uno que falta, no.
-                if not ruta.exists():
-                    raise
-                log.warning("No se ha podido revisar %s %d-%02d: se conserva la copia anterior", tipo.nombre, anio, mes)
-                cambiado = False
+                if ruta.exists():
+                    log.warning(
+                        "No se ha podido revisar %s %d-%02d: se conserva la copia anterior", tipo.nombre, anio, mes
+                    )
+                    ficheros.append(ruta)
+                    continue
+                if por_patron and posicion >= len(publicados) - REVISAR_ULTIMOS:
+                    log.warning("%s %d-%02d no está disponible todavía: se omite", tipo.nombre, anio, mes)
+                    continue
+                raise
             log.info("%s %d-%02d: %s", tipo.nombre, anio, mes, "descargado" if cambiado else "sin cambios")
         ficheros.append(ruta)
     return ficheros
