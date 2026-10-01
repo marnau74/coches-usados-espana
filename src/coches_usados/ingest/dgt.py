@@ -40,6 +40,9 @@ BASE = "https://www.dgt.es"
 LISTADOS = BASE + "/menusecundario/dgt-en-cifras/matraba-listados/{pagina}.html"
 PUBLICACIONES = BASE + "/export/sites/web-DGT/.galleries/downloads/dgt-en-cifras/publicaciones"
 REVISAR_ULTIMOS = 2
+# Sin listado, los últimos meses esperados pueden no estar publicados todavía (la DGT responde 404):
+# se prueban pocas veces, en vez de esperar varios minutos por cada uno a algo que no existe.
+INTENTOS_SIN_LISTADO = 2
 
 
 @dataclass(frozen=True)
@@ -132,7 +135,10 @@ class DgtClient:
         espera: float = 5.0,
         dormir=time.sleep,
     ):
-        self.sesion = sesion or sesion_con_reintentos()
+        # Sin reintentos en la sesión: los hace este cliente (también ante un 404, que la sesión no
+        # reintenta) con su propia espera. Dos capas de reintentos se multiplicaban (6 × 6 peticiones
+        # por fichero) y una ejecución con el servidor caído tardaba casi una hora.
+        self.sesion = sesion or sesion_con_reintentos(reintentos=0)
         self.intentos = intentos
         self.espera = espera
         self._dormir = dormir
@@ -161,12 +167,13 @@ class DgtClient:
             raise ValueError(f"El listado de {tipo.nombre} no enlaza ningún fichero: ¿ha cambiado la página?")
         return meses
 
-    def _descargar(self, url: str, destino: Path, validar) -> None:
+    def _descargar(self, url: str, destino: Path, validar, intentos: int | None = None) -> None:
         """Descarga `url` en `destino` con reintentos (también ante 404) y la valida con
         `validar(ruta_temporal)` antes de moverla a su sitio."""
+        intentos = intentos or self.intentos
         temporal = destino.with_name(destino.name + ".part")
         ultimo_error: Exception | None = None
-        for intento in range(1, self.intentos + 1):
+        for intento in range(1, intentos + 1):
             try:
                 with self.sesion.get(url, stream=True, timeout=TIEMPO_MAXIMO) as respuesta:
                     respuesta.raise_for_status()
@@ -178,20 +185,22 @@ class DgtClient:
                 return
             except (requests.RequestException, FicheroNoValido) as e:
                 ultimo_error = e
-                log.warning("Intento %d/%d de %s: %s", intento, self.intentos, url, e)
+                log.warning("Intento %d/%d de %s: %s", intento, intentos, url, e)
                 temporal.unlink(missing_ok=True)
-                if intento < self.intentos:
+                if intento < intentos:
                     self._dormir(self.espera * intento)
-        raise RuntimeError(f"No se ha podido descargar {url} tras {self.intentos} intentos") from ultimo_error
+        raise RuntimeError(f"No se ha podido descargar {url} tras {intentos} intentos") from ultimo_error
 
-    def descargar_mes(self, tipo: TipoTramite, anio: int, mes: int, carpeta: Path) -> tuple[Path, bool]:
+    def descargar_mes(
+        self, tipo: TipoTramite, anio: int, mes: int, carpeta: Path, intentos: int | None = None
+    ) -> tuple[Path, bool]:
         """Descarga un mes en `carpeta`. Si ya había una copia y la nueva es idéntica, se
         conserva la anterior (y su fecha). Devuelve la ruta y si el contenido ha cambiado."""
         nombre = nombre_fichero(tipo, anio, mes)
         carpeta.mkdir(parents=True, exist_ok=True)
         destino = carpeta / f"{nombre}.zip"
         nuevo = carpeta / f"{nombre}.zip.nuevo"
-        self._descargar(url_mes(tipo, anio, mes), nuevo, lambda ruta: comprobar_zip(ruta, nombre))
+        self._descargar(url_mes(tipo, anio, mes), nuevo, lambda ruta: comprobar_zip(ruta, nombre), intentos)
         if destino.exists() and _sha256(destino) == _sha256(nuevo):
             nuevo.unlink()
             return destino, False
@@ -252,8 +261,11 @@ def ingerir_microdatos(
     for posicion, (anio, mes) in enumerate(publicados):
         ruta = carpeta / f"{nombre_fichero(tipo, anio, mes)}.zip"
         if (anio, mes) in revisar or not ruta.exists():
+            quiza_sin_publicar = por_patron and posicion >= len(publicados) - REVISAR_ULTIMOS and not ruta.exists()
             try:
-                ruta, cambiado = cliente.descargar_mes(tipo, anio, mes, carpeta)
+                ruta, cambiado = cliente.descargar_mes(
+                    tipo, anio, mes, carpeta, INTENTOS_SIN_LISTADO if quiza_sin_publicar else None
+                )
             except RuntimeError:
                 # Un mes ya descargado se puede seguir usando si su revisión falla; uno que falta, no.
                 if ruta.exists():
@@ -262,7 +274,7 @@ def ingerir_microdatos(
                     )
                     ficheros.append(ruta)
                     continue
-                if por_patron and posicion >= len(publicados) - REVISAR_ULTIMOS:
+                if quiza_sin_publicar:
                     log.warning("%s %d-%02d no está disponible todavía: se omite", tipo.nombre, anio, mes)
                     continue
                 raise

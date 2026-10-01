@@ -75,7 +75,7 @@ idéntico al real) y, el día 20 de cada mes, el pipeline completo con datos rea
 publicación (`publicar.yml`).
 
 **Sobre la escala:** son 23 millones de filas de microdatos y unos 2 GB de ficheros. DuckDB
-construye todo el modelo y pasa las 100 comprobaciones en unos 20 segundos.
+construye todo el modelo y pasa sus 80 tests en menos de un minuto (40 segundos en GitHub Actions).
 
 ## Calidad de los datos
 
@@ -94,7 +94,8 @@ proyecto lo comprueba por varios caminos ([ADR 0005](docs/adr/0005-cuadre-con-la
 - **Los tests fallan cuando deben.** Los de cuadre tienen su propio test: se manipula una cifra
   de la tabla oficial y se comprueba que el test falla.
 
-100 comprobaciones de dbt y 95 tests de Python.
+80 tests de dbt, una comprobación de Dagster sobre bronze (que los datos de Eurostat estén al día) y
+98 tests de Python.
 
 ## Lo que este proyecto corrige de lecturas ingenuas de la misma fuente
 

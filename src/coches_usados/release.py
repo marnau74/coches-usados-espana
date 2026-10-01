@@ -76,10 +76,13 @@ def construir_contrato(con: duckdb.DuckDBPyConnection, tablas: list[str]) -> dic
 
 
 def exportar(warehouse: Path = WAREHOUSE, salida: Path = SALIDA) -> dict:
-    """Exporta gold a `salida/` y devuelve el contrato."""
+    """Exporta gold a `salida/` y devuelve el contrato. Antes borra la release anterior, pero
+    solo los ficheros que genera este módulo: si `salida` apunta por error a otra carpeta, no
+    se lleva por delante lo que haya en ella."""
     salida.mkdir(parents=True, exist_ok=True)
-    for viejo in salida.iterdir():
-        viejo.unlink()
+    for patron in ("*.parquet", NOMBRE_DUCKDB, f"{NOMBRE_DUCKDB}.wal", "contrato.json", "SHA256SUMS"):
+        for viejo in salida.glob(patron):
+            viejo.unlink()
 
     # Se abre el fichero de la release y se adjunta el warehouse en solo lectura: la
     # exportación no puede modificar el warehouse aunque haya un error.
@@ -98,7 +101,8 @@ def exportar(warehouse: Path = WAREHOUSE, salida: Path = SALIDA) -> dict:
             con.execute(f"COPY {ESQUEMA}.\"{tabla}\" TO '{destino}' (FORMAT parquet, COMPRESSION zstd)")
 
     (salida / "contrato.json").write_text(json.dumps(contrato, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    sumas = [f"{_sha256(f)}  {f.name}" for f in sorted(salida.iterdir()) if f.name != "SHA256SUMS"]
+    generados = [salida / f"{tabla}.parquet" for tabla in tablas] + [salida / NOMBRE_DUCKDB, salida / "contrato.json"]
+    sumas = [f"{_sha256(f)}  {f.name}" for f in sorted(generados)]
     (salida / "SHA256SUMS").write_text("\n".join(sumas) + "\n", encoding="utf-8")
     return contrato
 

@@ -4,8 +4,17 @@ name: publicar
 #   - web del informe y documentación de dbt en GitHub Pages (siempre);
 #   - release de datos datos-AAAA-MM (solo en la ejecución mensual o a mano).
 on:
+  # En cada cambio solo si afecta a los datos o al informe: un cambio en el README no merece una hora de
+  # pipeline ni pedirle a la DGT los ficheros de nuevo.
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "dbt/**"
+      - "datos_de_referencia/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/publicar.yml"
   schedule:
     - cron: "0 5 20 * *"   # día 20 de cada mes: la DGT y Eurostat ya han publicado el mes anterior
   workflow_dispatch: {}
@@ -39,17 +48,27 @@ jobs:
           path: |
             data/raw
             data/bronze
-          key: datos-${{ github.run_id }}
+          key: datos-sin-huella
           restore-keys: datos-
       - name: Pipeline completo con Dagster (descarga, bronze, silver, gold y comprobaciones)
         run: uv run dagster job execute -m coches_usados.definitions -j pipeline_mensual
-      - uses: actions/cache/save@v6
+      # La clave es una huella de los nombres y tamaños de los ficheros de la DGT: solo cambia cuando hay un mes
+      # nuevo o uno corregido. Así no se guarda una caché nueva de 3 GB en cada ejecución, sino solo cuando hay
+      # algo nuevo. (Una corrección del mismo tamaño no cambiaría la huella, pero tampoco hace falta: los dos
+      # últimos meses se vuelven a descargar siempre.)
+      - name: Huella de la caché
+        id: huella
         if: always()
+        run: |
+          huella=$(find data/raw/dgt data/raw/dgt_tablas data/bronze -type f -printf '%P %s\n' 2>/dev/null | sort | sha256sum | cut -c1-16)
+          echo "clave=datos-${huella}" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/save@v6
+        if: always() && steps.huella.outputs.clave != steps.cache.outputs.cache-matched-key
         with:
           path: |
             data/raw
             data/bronze
-          key: datos-${{ github.run_id }}
+          key: ${{ steps.huella.outputs.clave }}
       - name: Web del informe (desde gold)
         run: uv run python -m coches_usados.report.build_site
       - name: Documentación de dbt (con el grafo de linaje)

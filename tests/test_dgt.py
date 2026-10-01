@@ -341,6 +341,26 @@ def test_sin_listado_se_usa_el_patron_de_la_url_y_los_dos_ultimos_meses_pueden_f
     assert [f.name[-10:-4] for f in ficheros] == ["202401", "202402", "202403"]
 
 
+def test_sin_listado_los_meses_que_quiza_no_existen_se_prueban_pocas_veces(tmp_path):
+    # Un 404 de un mes que aún no se ha publicado es lo esperado: no merece seis intentos con varios minutos de espera.
+    pagina = dgt.LISTADOS.format(pagina=TRF.pagina)
+    respuestas = {pagina: [RespuestaFalsa(500)]}
+    for mes in (1, 2, 3):
+        respuestas[dgt.url_mes(TRF, 2024, mes)] = [RespuestaFalsa(200, zip_con(f"export_mensual_trf_2024{mes:02d}"))]
+    c, _ = cliente(respuestas, intentos=6)
+
+    dgt.ingerir_microdatos(c, TRF, (2024, 1), tmp_path, hoy=date(2024, 6, 20))
+
+    for mes in (4, 5):
+        assert c.sesion.peticiones.count(dgt.url_mes(TRF, 2024, mes)) == dgt.INTENTOS_SIN_LISTADO
+
+
+def test_la_sesion_por_defecto_no_reintenta_por_su_cuenta():
+    # Los reintentos los hace el cliente: dos capas se multiplicaban.
+    adaptador = dgt.DgtClient().sesion.get_adapter(dgt.BASE)
+    assert adaptador.max_retries.total == 0
+
+
 def test_sin_listado_un_mes_antiguo_que_falta_es_un_error(tmp_path):
     c, _ = _dgt_sin_listado((1, 3, 4, 5))  # falta febrero, que no es de los dos últimos
     with pytest.raises(RuntimeError, match="tras 2 intentos"):

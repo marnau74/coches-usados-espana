@@ -68,3 +68,17 @@ def test_exportar_sobre_un_warehouse_sin_gold_falla_y_no_modifica_el_warehouse(t
     duckdb.connect(str(vacio)).close()
     with pytest.raises(ValueError, match="gold"):
         release.exportar(vacio, tmp_path / "salida")
+
+
+def test_solo_borra_y_suma_los_ficheros_que_genera(warehouse_sintetico, tmp_path):
+    # Si la carpeta de salida apunta por error a otra con más cosas, no se borran ni entran en las sumas.
+    salida = tmp_path / "release"
+    salida.mkdir()
+    (salida / "notas.txt").write_text("de otra persona", encoding="utf-8")
+    (salida / "subcarpeta").mkdir()
+
+    release.exportar(warehouse_sintetico, salida)
+
+    assert (salida / "notas.txt").read_text(encoding="utf-8") == "de otra persona"
+    assert (salida / "subcarpeta").is_dir()
+    assert "notas.txt" not in (salida / "SHA256SUMS").read_text(encoding="utf-8")
